@@ -1,0 +1,37 @@
+packageName: org.example.lox.expression
+
+classes:
+  - name: Expression
+
+  - name: UnaryExpression
+    parentClass: Expression
+    fields:
+      - type: Token
+        name: operator
+
+      - type: Expression
+        name: right
+
+  - name: BinaryExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: left
+
+      - type: Token
+        name: operator
+
+      - type: Expression
+        name: right
+
+  - name: GroupingExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: expression
+
+  - name: LiteralExpression
+    parentClass: Expression
+    fields:
+      - type: Object
+        name: value
