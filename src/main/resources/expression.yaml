@@ -1,8 +1,9 @@
 packageName: org.example.lox.expression
 
-classes:
-  - name: Expression
+baseClass:
+  name: Expression
 
+classes:
   - name: UnaryExpression
     parentClass: Expression
     fields:

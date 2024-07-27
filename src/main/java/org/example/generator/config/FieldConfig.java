@@ -1,4 +1,4 @@
-package org.example.tool.config;
+package org.example.generator.config;
 
 import lombok.Value;
 
