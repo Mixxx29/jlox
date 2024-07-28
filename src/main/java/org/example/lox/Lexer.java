@@ -65,12 +65,13 @@ public class Lexer {
             case '-' -> addToken(TokenType.MINUS);
             case '*' -> addToken(TokenType.ASTERISK);
             case '/' -> scanComment();
-            case '!' -> addToken(match('=') ? TokenType.EXCLAMATION_MARK_EQUAL : TokenType.EXCLAMATION_MARK );
-            case '=' -> addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL );
-            case '<' -> addToken(match('=') ? TokenType.LESS_EQUAL : TokenType.LESS );
-            case '>' -> addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.EQUAL );
+            case '!' -> addToken(match('=') ? TokenType.EXCLAMATION_MARK_EQUAL : TokenType.EXCLAMATION_MARK);
+            case '=' -> addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+            case '<' -> addToken(match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
+            case '>' -> addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
             case '"' -> scanString();
-            case ' ', '\r', '\t' -> {} // Ignore
+            case ' ', '\r', '\t' -> {
+            } // Ignore
             case '\n' -> ++line;
             default -> handleDefault(c);
         }
@@ -105,7 +106,7 @@ public class Lexer {
     }
 
     private void handleDefault(char c) {
-        if (isDigit(c))  {
+        if (isDigit(c)) {
             scanNumber();
             return;
         }
