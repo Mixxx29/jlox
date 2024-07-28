@@ -36,3 +36,6 @@ classes:
     fields:
       - type: Object
         name: value
+
+      - type: TokenType
+        name: type

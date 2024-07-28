@@ -8,7 +8,7 @@ public class AstPrinter implements Visitor<String> {
     private final StringBuilder indent = new StringBuilder(" ".repeat(INDENT_INCREMENT_LENGTH));
 
     public String print(Expression expr) {
-        return "══▶" + expr.accept(this);
+        return "──▶" + expr.accept(this);
     }
 
     @Override
@@ -17,7 +17,7 @@ public class AstPrinter implements Visitor<String> {
 
         result.append("UnaryExpression\n")
                 .append(indent)
-                .append("╠═▶Operator ")
+                .append("├─▶Operator ")
                 .append(unaryExpression.operator.type)
                 .append(" '")
                 .append(unaryExpression.operator.lexeme)
@@ -26,10 +26,8 @@ public class AstPrinter implements Visitor<String> {
         result.append(indent);
 
         incrementIndent(false);
-        result.append("╚═▶").append(unaryExpression.right.accept(this));
+        result.append("╰─▶").append(unaryExpression.right.accept(this));
         decrementIndent();
-
-        newLine(result);
 
         return result.toString();
     }
@@ -42,14 +40,12 @@ public class AstPrinter implements Visitor<String> {
                 .append(indent);
 
         incrementIndent(true);
-        result.append("╠═▶")
+        result.append("├─▶")
                 .append(binaryExpression.left.accept(this));
         decrementIndent();
 
-        newLine(result);
-
         result.append(indent)
-                .append("╠═▶Operator ")
+                .append("├─▶Operator ")
                 .append(binaryExpression.operator.type)
                 .append(" '")
                 .append(binaryExpression.operator.lexeme)
@@ -58,10 +54,8 @@ public class AstPrinter implements Visitor<String> {
         result.append(indent);
 
         incrementIndent(false);
-        result.append("╚═▶").append(binaryExpression.right.accept(this));
+        result.append("╰─▶").append(binaryExpression.right.accept(this));
         decrementIndent();
-
-        newLine(result);
 
         return result.toString();
     }
@@ -74,19 +68,17 @@ public class AstPrinter implements Visitor<String> {
                 .append(indent);
 
         incrementIndent(false);
-        result.append("╚═▶")
+        result.append("╰─▶")
                 .append(groupingExpression.expression.accept(this));
         decrementIndent();
-
-        newLine(result);
 
         return result.toString();
     }
 
     @Override
     public String visitLiteralExpression(LiteralExpression literalExpression) {
-        if (literalExpression.value == null) return "Literal nil";
-        return "Literal " + literalExpression.value;
+        if (literalExpression.value == null) return "Literal nil\n";
+        return "Literal " + literalExpression.type + " " + literalExpression.value + "\n";
     }
 
     private void incrementIndent(boolean special) {
@@ -98,7 +90,7 @@ public class AstPrinter implements Visitor<String> {
         }
 
         for (int i = startIndex; i < startIndex + INDENT_INCREMENT_LENGTH; i++) {
-            indent.append((i + 1) % 4 == 0 ? '║' : ' ');
+            indent.append((i - INDENT_INCREMENT_LENGTH) % INDENT_INCREMENT_LENGTH == 0 ? '│' : ' ');
         }
     }
 
@@ -107,11 +99,10 @@ public class AstPrinter implements Visitor<String> {
         indent.replace(length - INDENT_INCREMENT_LENGTH, length, "");
     }
 
-    private StringBuilder newLine(StringBuilder builder) {
+    private void newLine(StringBuilder builder) {
         char lastChar = indent.charAt(indent.length() - 1);
         if (lastChar != '\n')
             builder.append("\n");
 
-        return builder;
     }
 }

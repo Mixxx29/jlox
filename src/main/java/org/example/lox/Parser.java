@@ -1,6 +1,7 @@
 package org.example.lox;
 
 import lombok.RequiredArgsConstructor;
+import org.example.lox.exception.ParseErrorException;
 import org.example.lox.expression.*;
 
 import java.util.List;
@@ -107,17 +108,15 @@ public class Parser {
     }
 
     private Expression parsePrimary() {
-        TokenType[] validTokenTypes = {
-                TokenType.NUMBER,
-                TokenType.STRING
-        };
+        if (matchToken(TokenType.NUMBER))
+            return new LiteralExpression(previousToken().literal, TokenType.NUMBER);
 
-        if (matchToken(validTokenTypes))
-            return new LiteralExpression(previousToken().literal);
+        if (matchToken(TokenType.STRING))
+            return new LiteralExpression(previousToken().literal, TokenType.STRING);
 
-        if (matchToken(TokenType.TRUE)) return new LiteralExpression(true);
-        if (matchToken(TokenType.FALSE)) return new LiteralExpression(false);
-        if (matchToken(TokenType.NIL)) return new LiteralExpression(null);
+        if (matchToken(TokenType.TRUE)) return new LiteralExpression(true, TokenType.TRUE);
+        if (matchToken(TokenType.FALSE)) return new LiteralExpression(false, TokenType.FALSE);
+        if (matchToken(TokenType.NIL)) return new LiteralExpression(null, TokenType.NIL);
 
         if (matchToken(TokenType.LEFT_PARENTHESIS)) {
             Expression expression = parseExpression();
