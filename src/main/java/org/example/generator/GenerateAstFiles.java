@@ -1,7 +1,6 @@
 package org.example.generator;
 
 import org.example.generator.config.*;
-import org.example.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,8 +89,8 @@ public class GenerateAstFiles {
                     .append(classConfig.getName())
                     .append("(")
                     .append(classConfig.getName())
-                    .append(" ")
-                    .append(StringUtils.toCamelCase(classConfig.getName()))
+                    .append(" ").append(classConfig.getName().toLowerCase().charAt(0))
+                    .append(classConfig.getName().substring(1))
                     .append(");\n");
         }
 

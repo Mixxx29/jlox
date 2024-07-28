@@ -1,5 +1,7 @@
 package org.example.lox;
 
+import org.example.lox.expression.Expression;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,14 +48,25 @@ public class Lox {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        // Print tokens
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        Parser parser = new Parser(tokens);
+        Expression expression = parser.parse();
+
+        if (hadError) return;
+
+        System.out.println(new AstPrinter().print(expression));
     }
 
     static void error(int line, String message) {
         report(line, "", message);
+    }
+
+    static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end of file", message);
+            return;
+        }
+
+        report(token.line, " at '" + token.lexeme + "'", message);
     }
 
     private static void report(int line, String where, String message) {
