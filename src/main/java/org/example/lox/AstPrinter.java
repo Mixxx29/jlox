@@ -1,6 +1,10 @@
 package org.example.lox;
 
-import org.example.lox.expression.*;
+import org.example.lox.ast.Visitor;
+import org.example.lox.ast.expression.*;
+import org.example.lox.ast.statement.ExpressionStatement;
+import org.example.lox.ast.statement.PrintStatement;
+import org.example.lox.ast.statement.VariableStatement;
 
 public class AstPrinter implements Visitor<String> {
 
@@ -79,6 +83,26 @@ public class AstPrinter implements Visitor<String> {
     public String visitLiteralExpression(LiteralExpression literalExpression) {
         if (literalExpression.value == null) return "Literal nil\n";
         return "Literal " + literalExpression.type + " " + literalExpression.value + "\n";
+    }
+
+    @Override
+    public String visitVariableExpression(VariableExpression variableExpression) {
+        return "";
+    }
+
+    @Override
+    public String visitExpressionStatement(ExpressionStatement expressionStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitPrintStatement(PrintStatement printStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitVariableStatement(VariableStatement variableStatement) {
+        return "";
     }
 
     private void incrementIndent(boolean special) {

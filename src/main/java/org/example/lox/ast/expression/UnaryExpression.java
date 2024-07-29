@@ -1,6 +1,9 @@
-package org.example.lox.expression;
+package org.example.lox.ast.expression;
 
 import org.example.lox.Token;
+
+import org.example.lox.ast.Visitor;
+
 
 import lombok.RequiredArgsConstructor;
 

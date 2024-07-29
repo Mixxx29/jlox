@@ -1,9 +1,14 @@
 package org.example.lox;
 
 import lombok.RequiredArgsConstructor;
+import org.example.lox.ast.expression.*;
+import org.example.lox.ast.statement.ExpressionStatement;
+import org.example.lox.ast.statement.PrintStatement;
+import org.example.lox.ast.statement.Statement;
+import org.example.lox.ast.statement.VariableStatement;
 import org.example.lox.exception.ParseErrorException;
-import org.example.lox.expression.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -11,12 +16,53 @@ public class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    public Expression parse() {
+    public List<Statement> parse() {
+        List<Statement> statements = new ArrayList<>();
+        while (!isAtEnd())
+            statements.add(parseDeclaration());
+
+        return statements;
+    }
+
+    private Statement parseDeclaration() {
         try {
-            return parseExpression();
+            if (matchToken(TokenType.VAR))
+                return parseVariableDeclaration();
+
+            return parseStatement();
         } catch (ParseErrorException error) {
+            synchronize();
             return null;
         }
+    }
+
+    private Statement parseVariableDeclaration() {
+        Token name = consumeToken(TokenType.IDENTIFIER, "Expected variable name");
+
+        Expression expression = null;
+        if (matchToken(TokenType.EQUAL))
+            expression = parseExpression();
+
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after variable declaration");
+        return new VariableStatement(name, expression);
+    }
+
+    private Statement parseStatement() {
+        if (matchToken(TokenType.PRINT)) return parsePrintStatement();
+
+        return parseExpressionStatement();
+    }
+
+    private Statement parsePrintStatement() {
+        Expression expression = parseExpression();
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after value");
+        return new PrintStatement(expression);
+    }
+
+    private Statement parseExpressionStatement() {
+        Expression expression = parseExpression();
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after expression");
+        return new ExpressionStatement(expression);
     }
 
     private Expression parseExpression() {
@@ -118,6 +164,8 @@ public class Parser {
         if (matchToken(TokenType.FALSE)) return new LiteralExpression(false, TokenType.FALSE);
         if (matchToken(TokenType.NIL)) return new LiteralExpression(null, TokenType.NIL);
 
+        if (matchToken(TokenType.IDENTIFIER)) return new VariableExpression(previousToken());
+
         if (matchToken(TokenType.LEFT_PARENTHESIS)) {
             Expression expression = parseExpression();
             Token consumed = consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after expression");
@@ -137,6 +185,28 @@ public class Parser {
     private ParseErrorException error(Token token, String errorMessage) {
         Lox.error(token, errorMessage);
         return new ParseErrorException();
+    }
+
+    private void synchronize() {
+        advanceToken();
+
+        while (!isAtEnd()) {
+            if (previousToken().type == TokenType.SEMICOLON) return;
+
+            switch (peekToken().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+
+            advanceToken();
+        }
     }
 
     private boolean matchToken(TokenType... types) {

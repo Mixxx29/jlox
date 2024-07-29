@@ -1,17 +1,32 @@
 package org.example.lox;
 
+import org.example.Enviroment;
+import org.example.lox.ast.Visitor;
+import org.example.lox.ast.expression.*;
+import org.example.lox.ast.statement.ExpressionStatement;
+import org.example.lox.ast.statement.PrintStatement;
+import org.example.lox.ast.statement.Statement;
+import org.example.lox.ast.statement.VariableStatement;
 import org.example.lox.exception.RuntimeError;
-import org.example.lox.expression.*;
+
+import java.util.List;
 
 public class Interpreter implements Visitor<Object> {
 
-    public void interpret(Expression expression) {
+    private Enviroment enviroment = new Enviroment();
+
+    public void interpret(List<Statement> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Statement statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    private void execute(Statement statement) {
+        statement.accept(this);
     }
 
     @Override
@@ -133,6 +148,35 @@ public class Interpreter implements Visitor<Object> {
     @Override
     public Object visitLiteralExpression(LiteralExpression literalExpression) {
         return literalExpression.value;
+    }
+
+    @Override
+    public Object visitVariableExpression(VariableExpression variableExpression) {
+        return enviroment.get(variableExpression.token);
+    }
+
+    @Override
+    public Object visitExpressionStatement(ExpressionStatement expressionStatement) {
+        evaluate(expressionStatement.expression);
+        return null;
+    }
+
+    @Override
+    public Object visitPrintStatement(PrintStatement printStatement) {
+        Object value = evaluate(printStatement.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Object visitVariableStatement(VariableStatement variableStatement) {
+        Object value = null;
+        if (variableStatement.expression != null) {
+            value = evaluate(variableStatement.expression);
+        }
+
+        enviroment.define(variableStatement.token.lexeme, value);
+        return null;
     }
 
     private Object evaluate(Expression expression) {

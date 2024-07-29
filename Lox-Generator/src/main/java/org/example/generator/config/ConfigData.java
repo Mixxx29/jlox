@@ -7,6 +7,8 @@ import java.util.List;
 @Value
 public class ConfigData {
     String packageName;
-    ClassConfig baseClass;
-    List<ClassConfig> classes;
+    ClassConfig baseExpression;
+    List<ClassConfig> expressions;
+    ClassConfig baseStatement;
+    List<ClassConfig> statements;
 }

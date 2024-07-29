@@ -1,7 +1,7 @@
 package org.example.lox;
 
+import org.example.lox.ast.statement.Statement;
 import org.example.lox.exception.RuntimeError;
-import org.example.lox.expression.Expression;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -54,11 +54,11 @@ public class Lox {
         List<Token> tokens = lexer.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expression expression = parser.parse();
+        List<Statement> statements = parser.parse();
 
         if (hadError) return;
 
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
 //        System.out.println(new AstPrinter().print(expression));
     }
 

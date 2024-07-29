@@ -1,9 +1,9 @@
-packageName: org.example.lox.expression
+packageName: org.example.lox.ast
 
-baseClass:
+baseExpression:
   name: Expression
 
-classes:
+expressions:
   - name: UnaryExpression
     parentClass: Expression
     fields:
@@ -39,3 +39,34 @@ classes:
 
       - type: TokenType
         name: type
+
+  - name: VariableExpression
+    parentClass: Expression
+    fields:
+      - type: Token
+        name: token
+
+baseStatement:
+  name: Statement
+
+statements:
+  - name: ExpressionStatement
+    parentClass: Statement
+    fields:
+      - type: Expression
+        name: expression
+
+  - name: PrintStatement
+    parentClass: Statement
+    fields:
+      - type: Expression
+        name: expression
+
+  - name: VariableStatement
+    parentClass: Statement
+    fields:
+      - type: Token
+        name: token
+
+      - type: Expression
+        name: expression

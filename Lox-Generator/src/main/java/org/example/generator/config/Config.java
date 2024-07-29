@@ -16,7 +16,7 @@ public class Config {
             throw new IllegalArgumentException("Invalid config file: " + filename);
 
         Map<String, Object> data = loadYaml(filename);
-        this.data = convert(data);
+        this.data = loadConfigData(data);
     }
 
     private Map<String, Object> loadYaml(String filename) {
@@ -29,30 +29,51 @@ public class Config {
     }
 
     @SuppressWarnings("unchecked")
-    private ConfigData convert(Map<String, Object> data) {
+    private ConfigData loadConfigData(Map<String, Object> data) {
         String packageName = (String) data.get("packageName");
         if (packageName == null)
             throw new IllegalArgumentException("Config: Missing package name");
 
 
-        Map<String, Object> baseClassData = (Map<String, Object>) data.get("baseClass");
-        if (baseClassData == null)
-            throw new IllegalArgumentException("Config: Missing base class");
+        Map<String, Object> baseExpressionClassData = (Map<String, Object>) data.get("baseExpression");
+        if (baseExpressionClassData == null)
+            throw new IllegalArgumentException("Config: Missing base expression class");
 
-        ClassConfig baseClass = convertBaseClass(baseClassData);
+        ClassConfig baseExpressionClass = loadBaseExpression(baseExpressionClassData);
 
-        List<Map<String, Object>> classesData = (List<Map<String, Object>>) data.get("classes");
-        List<ClassConfig> classes = classesData.stream()
+        List<Map<String, Object>> expressionsData = (List<Map<String, Object>>) data.get("expressions");
+        List<ClassConfig> expressions = expressionsData.stream()
                 .map(Config::convertClassConfig)
                 .toList();
 
-        return new ConfigData(packageName, baseClass, classes);
+        Map<String, Object> baseStatementClassData = (Map<String, Object>) data.get("baseStatement");
+        if (baseStatementClassData == null)
+            throw new IllegalArgumentException("Config: Missing base statement class");
+
+        ClassConfig baseStatementClass = loadBaseStatement(baseStatementClassData);
+
+        List<Map<String, Object>> statementsData = (List<Map<String, Object>>) data.get("statements");
+        List<ClassConfig> statements = statementsData.stream()
+                .map(Config::convertClassConfig)
+                .toList();
+
+        return new ConfigData(packageName, baseExpressionClass, expressions, baseStatementClass, statements);
     }
 
-    private ClassConfig convertBaseClass(Map<String, Object> classData) {
+    private ClassConfig loadBaseExpression(Map<String, Object> classData) {
         String name = (String) classData.get("name");
         if (name == null)
-            throw new IllegalArgumentException("BaseClass: Missing name");
+            throw new IllegalArgumentException("BaseExpression: Missing name");
+
+        List<MethodConfig> methods = List.of(createAcceptMethod());
+
+        return new ClassConfig(name, null, true, null, methods);
+    }
+
+    private ClassConfig loadBaseStatement(Map<String, Object> classData) {
+        String name = (String) classData.get("name");
+        if (name == null)
+            throw new IllegalArgumentException("BaseStatement: Missing name");
 
         List<MethodConfig> methods = List.of(createAcceptMethod());
 
@@ -123,19 +144,30 @@ public class Config {
         return data.getPackageName();
     }
 
-    public ClassConfig getBaseClass() {
-        return data.getBaseClass();
+    public ClassConfig getBaseExpression() {
+        return data.getBaseExpression();
     }
 
-    public List<ClassConfig> getClasses() {
-        return data.getClasses();
+    public List<ClassConfig> getExpressions() {
+        return data.getExpressions();
+    }
+
+    public ClassConfig getBaseStatement() {
+        return data.getBaseStatement();
+    }
+
+    public List<ClassConfig> getStatements() {
+        return data.getStatements();
     }
 
     public ClassConfig getClassByName(String name) {
-        if (getBaseClass().getName().equals(name))
-            return getBaseClass();
+        if (getBaseExpression().getName().equals(name))
+            return getBaseExpression();
 
-        return getClasses().stream().filter(clazz -> clazz.getName().equals(name))
+        if (getBaseStatement().getName().equals(name))
+            return getBaseStatement();
+
+        return getExpressions().stream().filter(clazz -> clazz.getName().equals(name))
                 .toList()
                 .get(0);
     }

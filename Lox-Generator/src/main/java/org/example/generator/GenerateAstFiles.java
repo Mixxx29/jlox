@@ -7,53 +7,87 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public class GenerateAstFiles {
+
+    private static Config config;
+    private static String baseDirectoryPath;
+
     public static void main(String[] args) {
-        if (args.length != 2 || (!args[0].equals("-e") && !args[0].equals("-s"))) {
-            System.err.println("Usage: java GenerateAstFiles [ -e | -s ] <config_file>");
+
+        if (args.length != 2) {
+            System.err.println("Usage: java GenerateAstFiles <config_file> <output_directory>");
             System.exit(64);
         }
 
-        Config config = new Config(args[1]);
-        generateFiles(config);
+        config = new Config(args[0]);
+        baseDirectoryPath = createBaseDirectory(args[1]);
+        generateFiles();
     }
 
-    private static void generateFiles(Config config) {
-        String baseDirectory = createBaseDirectory(config);
+    private static void generateFiles() {
+        // Append expressions and statements lists
+        ArrayList<ClassConfig> classes = new ArrayList<>(config.getExpressions());
+        classes.addAll(config.getStatements());
 
         // Generate Visitor interface file
-        String visitorInterfaceContent = generateVisitorInterfaceContent(config.getPackage(), config.getClasses());
-        createClassFile(baseDirectory, "Visitor", visitorInterfaceContent);
+        String visitorInterfaceContent = generateVisitorInterfaceContent(config.getPackage(), classes);
+        createClassFile(baseDirectoryPath, "Visitor", visitorInterfaceContent);
 
-        // Generate Base class file
-        String baseClassContent = generateClassContent(config.getPackage(), config.getBaseClass(), null);
-        createClassFile(baseDirectory, config.getBaseClass().getName(), baseClassContent);
+        // Generate base expression class file
+        String baseExpressionContent = generateClassContent(config.getPackage() + ".expression", config.getBaseExpression(), null);
+        createClassFile(baseDirectoryPath + "\\expression", config.getBaseExpression().getName(), baseExpressionContent);
 
-        // Generate classes files
-        for (ClassConfig classConfig : config.getClasses()) {
+        // Generate expressions files
+        for (ClassConfig classConfig : config.getExpressions()) {
             String classContent = generateClassContent(
-                    config.getPackage(),
+                    config.getPackage() + ".expression",
                     classConfig,
                     config.getClassByName(classConfig.getParentClass())
             );
-            createClassFile(baseDirectory, classConfig.getName(), classContent);
+            createClassFile(baseDirectoryPath + "\\expression", classConfig.getName(), classContent);
+        }
+
+        // Generate base statement class file
+        String baseStatementContent = generateClassContent(config.getPackage() + ".statement", config.getBaseStatement(), null);
+        createClassFile(baseDirectoryPath + "\\statement", config.getBaseStatement().getName(), baseStatementContent);
+
+        // Generate statements files
+        for (ClassConfig classConfig : config.getStatements()) {
+            String classContent = generateClassContent(
+                    config.getPackage() + ".statement",
+                    classConfig,
+                    config.getClassByName(classConfig.getParentClass())
+            );
+            createClassFile(baseDirectoryPath + "\\statement", classConfig.getName(), classContent);
         }
     }
 
-    private static String createBaseDirectory(Config config) {
-        String baseDirectory = "src/main/java/" + config.getPackage().replace('.', '/');
-        Path directory = Paths.get(baseDirectory);
-        if (Files.exists(directory))
-            deleteDirectory(directory);
+    private static String createBaseDirectory(String baseDirectoryPath) {
+        baseDirectoryPath += "\\\\" + config.getPackage().replace('.', '\\');
+        Path baseDirectory = Paths.get(baseDirectoryPath);
+
+        if (Files.exists(baseDirectory))
+            deleteDirectory(baseDirectory);
+
+        Path expressionDirectory = Paths.get(baseDirectoryPath + "\\expression");
+        if (Files.exists(expressionDirectory))
+            deleteDirectory(expressionDirectory);
+
+        Path statementsDirectory = Paths.get(baseDirectoryPath + "\\statement");
+        if (Files.exists(statementsDirectory))
+            deleteDirectory(statementsDirectory);
 
         try {
-            Files.createDirectories(directory);
-            return baseDirectory;
+            Files.createDirectories(baseDirectory);
+            Files.createDirectories(expressionDirectory);
+            Files.createDirectories(statementsDirectory);
+            return baseDirectory.toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -78,11 +112,20 @@ public class GenerateAstFiles {
         StringBuilder builder = new StringBuilder();
         builder.append("package ").append(packageName).append(";\n\n");
 
+        builder.append("import ").append(packageName).append(".expression.*;\n");
+        builder.append("import ").append(packageName).append(".statement.*;\n\n");
+
         builder.append("public interface Visitor<R>  {\n");
 
+        boolean separated = false;
         for (ClassConfig classConfig : classes) {
             if (classConfig.isAbstract())
                 continue;
+
+            if (!separated && isStatementClass(classConfig)) {
+                builder.append("\n");
+                separated = true;
+            }
 
             builder.append("\t")
                     .append("public R visit")
@@ -101,10 +144,12 @@ public class GenerateAstFiles {
 
     private static String generateClassContent(String packageName, ClassConfig classConfig, ClassConfig parentClass) {
         StringBuilder builder = new StringBuilder();
+
         builder.append("package ").append(packageName).append(";\n");
 
         addImports(packageName, builder, classConfig);
 
+        builder.append("\nimport ").append(config.getPackage()).append(".Visitor;\n\n");
         builder.append("\nimport lombok.RequiredArgsConstructor;\n\n");
         builder.append("@RequiredArgsConstructor\n");
         builder.append("public ");
@@ -254,21 +299,30 @@ public class GenerateAstFiles {
                     builder.append("\nimport ")
                             .append(typePackage)
                             .append(".")
-                            .append(fieldConfig.getType())
+                            .append(fieldConfig.getType().split("<")[0])
                             .append(";\n");
+                }
+            }
+        }
+
+        if (classConfig.getMethods() != null) {
+            for (MethodConfig methodConfig : classConfig.getMethods()) {
+                for (ParameterConfig parameterConfig : methodConfig.getParameters()) {
+                    String typePackage = getPackageName(parameterConfig.getType());
+                    if (typePackage != null && !typePackage.equals(packageName)) {
+                        builder.append("\nimport ")
+                                .append(typePackage)
+                                .append(".")
+                                .append(parameterConfig.getType().split("<")[0])
+                                .append(";\n");
+                    }
                 }
             }
         }
     }
 
     private static String getPackageName(String className) {
-        File baseDirectory = Paths.get("")
-                .toAbsolutePath()
-                .resolve("src")
-                .resolve("main")
-                .resolve("java")
-                .toFile();
-
+        File baseDirectory = Paths.get(baseDirectoryPath.split("java")[0] + "java").toFile();
         Optional<String> packageName = findPackage(baseDirectory, className, baseDirectory.toPath());
         return packageName.orElse(null);
     }
@@ -276,6 +330,8 @@ public class GenerateAstFiles {
     private static Optional<String> findPackage(File directory, String className, Path sourcePath) {
         File[] files = directory.listFiles();
         if (files == null) return Optional.empty();
+
+        className = className.split("<")[0];
 
         for (File file : files) {
             if (file.isDirectory()) {
@@ -300,5 +356,22 @@ public class GenerateAstFiles {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void createDirectory(String directoryPath) {
+        Path filepath = Paths.get(directoryPath);
+        try {
+            Files.createDirectory(filepath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static boolean isExpressionClass(ClassConfig classConfig) {
+        return classConfig.getName().endsWith("Expression");
+    }
+
+    private static boolean isStatementClass(ClassConfig classConfig) {
+        return classConfig.getName().endsWith("Statement");
     }
 }
