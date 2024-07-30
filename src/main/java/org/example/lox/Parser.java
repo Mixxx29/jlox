@@ -2,10 +2,7 @@ package org.example.lox;
 
 import lombok.RequiredArgsConstructor;
 import org.example.lox.ast.expression.*;
-import org.example.lox.ast.statement.ExpressionStatement;
-import org.example.lox.ast.statement.PrintStatement;
-import org.example.lox.ast.statement.Statement;
-import org.example.lox.ast.statement.VariableStatement;
+import org.example.lox.ast.statement.*;
 import org.example.lox.exception.ParseErrorException;
 
 import java.util.ArrayList;
@@ -48,15 +45,91 @@ public class Parser {
     }
 
     private Statement parseStatement() {
+        if (matchToken(TokenType.IF)) return parseIfStatement();
         if (matchToken(TokenType.PRINT)) return parsePrintStatement();
+        if (matchToken(TokenType.FOR)) return parseForStatement();
+        if (matchToken(TokenType.WHILE)) return parseWhileStatement();
+        if (matchToken(TokenType.LEFT_BRACE)) return new BlockStatement(parseBlock());
 
         return parseExpressionStatement();
+    }
+
+    private Statement parseIfStatement() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'if'");
+        Expression condition = parseExpression();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after condition");
+
+        Statement thenStatement = parseStatement();
+        Statement elseStatement = null;
+        if (matchToken(TokenType.ELSE))
+            elseStatement = parseStatement();
+
+        return new IfStatement(condition, thenStatement, elseStatement);
+    }
+
+    private List<Statement> parseBlock() {
+        List<Statement> statements = new ArrayList<>();
+
+        while (!checkTokenType(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(parseDeclaration());
+        }
+
+        consumeToken(TokenType.RIGHT_BRACE, "Expected '}' after block");
+        return statements;
     }
 
     private Statement parsePrintStatement() {
         Expression expression = parseExpression();
         consumeToken(TokenType.SEMICOLON, "Expected ';' after value");
         return new PrintStatement(expression);
+    }
+
+    private Statement parseForStatement() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'for'");
+
+        Statement initializer;
+        if (matchToken(TokenType.SEMICOLON)) {
+            initializer = null;
+        } else if (matchToken(TokenType.VAR)) {
+            initializer = parseVariableDeclaration();
+        } else {
+            initializer = parseExpressionStatement();
+        }
+
+        Expression condition = null;
+        if (!checkTokenType(TokenType.SEMICOLON))
+            condition = parseExpression();
+
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after condition");
+
+        Expression increment = null;
+        if (!checkTokenType(TokenType.SEMICOLON))
+            increment = parseExpression();
+
+        consumeToken(TokenType.RIGHT_PARENTHESIS, " Expected ')' at the end of 'for' clause");
+
+        Statement body = parseStatement();
+
+        if (increment != null)
+            body = new BlockStatement(List.of(body, new ExpressionStatement(increment)));
+
+        if (condition == null)
+            condition = new LiteralExpression(true, TokenType.TRUE);
+
+        body = new WhileStatement(condition, body);
+
+        if (initializer != null)
+            body = new BlockStatement(List.of(initializer, body));
+
+        return body;
+    }
+
+    private Statement parseWhileStatement() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'while'");
+        Expression condition = parseExpression();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after condition");
+        Statement body = parseStatement();
+        return new WhileStatement(condition, body);
     }
 
     private Statement parseExpressionStatement() {
@@ -66,7 +139,49 @@ public class Parser {
     }
 
     private Expression parseExpression() {
-        return parseEquality();
+        return parseAssignment();
+    }
+
+    private Expression parseAssignment() {
+        Expression expression = parseOr();
+
+        if (matchToken(TokenType.EQUAL)) {
+            Token equalToken = previousToken();
+            Expression value = parseAssignment();
+
+            if (expression instanceof VariableExpression variableExpression) {
+                Token token = variableExpression.token;
+                return new AssignmentExpression(token, value);
+            }
+
+            throw error(equalToken, "Invalid assignment target");
+        }
+
+        return expression;
+    }
+
+    private Expression parseOr() {
+        Expression expression = parseAnd();
+
+        while (matchToken(TokenType.OR)) {
+            Token operator = previousToken();
+            Expression right = parseAnd();
+            expression = new LogicalExpression(expression, operator, right);
+        }
+
+        return expression;
+    }
+
+    private Expression parseAnd() {
+        Expression expression = parseEquality();
+
+        while (matchToken(TokenType.AND)) {
+            Token operator = previousToken();
+            Expression right = parseEquality();
+            expression = new LogicalExpression(expression, operator, right);
+        }
+
+        return expression;
     }
 
     private Expression parseEquality() {

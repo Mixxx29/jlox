@@ -2,8 +2,6 @@ package org.example.lox.ast.statement;
 
 import org.example.lox.ast.Visitor;
 
-import org.example.lox.ast.Visitor;
-
 
 import lombok.RequiredArgsConstructor;
 

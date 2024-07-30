@@ -46,6 +46,27 @@ expressions:
       - type: Token
         name: token
 
+  - name: AssignmentExpression
+    parentClass: Expression
+    fields:
+      - type: Token
+        name: token
+
+      - type: Expression
+        name: expression
+
+  - name: LogicalExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: left
+
+      - type: Token
+        name: operator
+
+      - type: Expression
+        name: right
+
 baseStatement:
   name: Statement
 
@@ -70,3 +91,30 @@ statements:
 
       - type: Expression
         name: expression
+
+  - name: BlockStatement
+    parentClass: Statement
+    fields:
+      - type: List<Statement>
+        name: statements
+
+  - name: IfStatement
+    parentClass: Statement
+    fields:
+      - type: Expression
+        name: condition
+
+      - type: Statement
+        name: thenBranch
+
+      - type: Statement
+        name: elseBranch
+
+  - name: WhileStatement
+    parentClass: Statement
+    fields:
+      - type: Expression
+        name: condition
+
+      - type: Statement
+        name: body

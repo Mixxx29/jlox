@@ -294,13 +294,24 @@ public class GenerateAstFiles {
     private static void addImports(String packageName, StringBuilder builder, ClassConfig classConfig) {
         if (classConfig.getFields() != null) {
             for (FieldConfig fieldConfig : classConfig.getFields()) {
-                String typePackage = getPackageName(fieldConfig.getType());
+                String className = fieldConfig.getType();
+                String namePart = className.split("<")[0];
+                
+                String typePackage = getPackageName(namePart);
                 if (typePackage != null && !typePackage.equals(packageName)) {
-                    builder.append("\nimport ")
-                            .append(typePackage)
-                            .append(".")
-                            .append(fieldConfig.getType().split("<")[0])
-                            .append(";\n");
+                    insertImport(builder, typePackage + "." + namePart);
+                }
+
+                if (!className.contains("<") || !className.contains(">"))
+                    continue;
+
+                String paramsPart = className.substring(className.indexOf('<') + 1, className.indexOf('>'));
+                String[] classNames = paramsPart.split(",\\s*");
+                for (String name : classNames) {
+                    typePackage = getPackageName(name);
+                    if (typePackage != null && !typePackage.equals(packageName)) {
+                        insertImport(builder, typePackage + "." + name);
+                    }
                 }
             }
         }
@@ -310,18 +321,22 @@ public class GenerateAstFiles {
                 for (ParameterConfig parameterConfig : methodConfig.getParameters()) {
                     String typePackage = getPackageName(parameterConfig.getType());
                     if (typePackage != null && !typePackage.equals(packageName)) {
-                        builder.append("\nimport ")
-                                .append(typePackage)
-                                .append(".")
-                                .append(parameterConfig.getType().split("<")[0])
-                                .append(";\n");
+                        insertImport(builder, typePackage + "." + parameterConfig.getType());
                     }
                 }
             }
         }
     }
 
+    private static void insertImport(StringBuilder builder, String importValue) {
+        builder.append("\nimport ")
+                .append(importValue)
+                .append(";\n");
+    }
+
     private static String getPackageName(String className) {
+        if (className.equals("List")) return "java.util";
+
         File baseDirectory = Paths.get(baseDirectoryPath.split("java")[0] + "java").toFile();
         Optional<String> packageName = findPackage(baseDirectory, className, baseDirectory.toPath());
         return packageName.orElse(null);
@@ -330,8 +345,6 @@ public class GenerateAstFiles {
     private static Optional<String> findPackage(File directory, String className, Path sourcePath) {
         File[] files = directory.listFiles();
         if (files == null) return Optional.empty();
-
-        className = className.split("<")[0];
 
         for (File file : files) {
             if (file.isDirectory()) {
@@ -346,6 +359,7 @@ public class GenerateAstFiles {
                 return Optional.of(packageName);
             }
         }
+
         return Optional.empty();
     }
 

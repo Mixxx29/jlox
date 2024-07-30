@@ -1,32 +1,29 @@
 package org.example.lox;
 
-import org.example.Enviroment;
 import org.example.lox.ast.Visitor;
 import org.example.lox.ast.expression.*;
-import org.example.lox.ast.statement.ExpressionStatement;
-import org.example.lox.ast.statement.PrintStatement;
-import org.example.lox.ast.statement.Statement;
-import org.example.lox.ast.statement.VariableStatement;
+import org.example.lox.ast.statement.*;
 import org.example.lox.exception.RuntimeError;
 
 import java.util.List;
 
 public class Interpreter implements Visitor<Object> {
 
-    private Enviroment enviroment = new Enviroment();
+    private Environment environment = new Environment(null);
 
     public void interpret(List<Statement> statements) {
         try {
+            if (statements.size() == 1 && statements.get(0) instanceof ExpressionStatement expressionStatement) {
+                System.out.println(stringify(expressionStatement.expression.accept(this)));
+                return;
+            }
+
             for (Statement statement : statements) {
                 execute(statement);
             }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
-    }
-
-    private void execute(Statement statement) {
-        statement.accept(this);
     }
 
     @Override
@@ -152,7 +149,27 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitVariableExpression(VariableExpression variableExpression) {
-        return enviroment.get(variableExpression.token);
+        return environment.get(variableExpression.token);
+    }
+
+    @Override
+    public Object visitAssignmentExpression(AssignmentExpression assignmentExpression) {
+        Object value = evaluate(assignmentExpression.expression);
+        environment.assign(assignmentExpression.token, value);
+        return value;
+    }
+
+    @Override
+    public Object visitLogicalExpression(LogicalExpression logicalExpression) {
+        Object left = evaluate(logicalExpression.left);
+
+        if (logicalExpression.operator.type == TokenType.OR) {
+            if (isTrue(left)) return left;
+        } else {
+            if (!isTrue(left)) return left;
+        }
+
+        return evaluate(logicalExpression.right);
     }
 
     @Override
@@ -175,8 +192,48 @@ public class Interpreter implements Visitor<Object> {
             value = evaluate(variableStatement.expression);
         }
 
-        enviroment.define(variableStatement.token.lexeme, value);
+        environment.define(variableStatement.token.lexeme, value);
         return null;
+    }
+
+    @Override
+    public Object visitBlockStatement(BlockStatement blockStatement) {
+        executeBlock(blockStatement.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
+    public Object visitIfStatement(IfStatement ifStatement) {
+        if (isTrue(evaluate(ifStatement.condition))) {
+            execute(ifStatement.thenBranch);
+        } else if (ifStatement.elseBranch != null) {
+            execute(ifStatement.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
+    public Object visitWhileStatement(WhileStatement whileStatement) {
+        while (isTrue(evaluate(whileStatement.condition)))
+            execute(whileStatement.body);
+
+        return null;
+    }
+
+    private void executeBlock(List<Statement> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for (Statement statement : statements)
+                execute(statement);
+        } finally {
+            this.environment = previous;
+        }
+    }
+
+    private void execute(Statement statement) {
+        statement.accept(this);
     }
 
     private Object evaluate(Expression expression) {

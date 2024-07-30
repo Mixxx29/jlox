@@ -59,7 +59,9 @@ public class Lox {
         if (hadError) return;
 
         interpreter.interpret(statements);
-//        System.out.println(new AstPrinter().print(expression));
+
+//        for (Statement statement : statements)
+//            System.out.println(new AstPrinter().print(statement));
     }
 
     public static void runtimeError(RuntimeError error) {

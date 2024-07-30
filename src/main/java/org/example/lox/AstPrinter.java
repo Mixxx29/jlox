@@ -2,17 +2,15 @@ package org.example.lox;
 
 import org.example.lox.ast.Visitor;
 import org.example.lox.ast.expression.*;
-import org.example.lox.ast.statement.ExpressionStatement;
-import org.example.lox.ast.statement.PrintStatement;
-import org.example.lox.ast.statement.VariableStatement;
+import org.example.lox.ast.statement.*;
 
 public class AstPrinter implements Visitor<String> {
 
     private final int INDENT_INCREMENT_LENGTH = 3;
     private final StringBuilder indent = new StringBuilder(" ".repeat(INDENT_INCREMENT_LENGTH));
 
-    public String print(Expression expr) {
-        return "──▶" + expr.accept(this);
+    public String print(Statement statement) {
+        return "──▶" + statement.accept(this);
     }
 
     @Override
@@ -87,21 +85,116 @@ public class AstPrinter implements Visitor<String> {
 
     @Override
     public String visitVariableExpression(VariableExpression variableExpression) {
+        StringBuilder result = new StringBuilder();
+
+        result.append("PrintStatement\n")
+                .append(indent);
+
+        incrementIndent(true);
+        result.append("╰─▶Identifier ")
+                .append(variableExpression.token.lexeme);
+        decrementIndent();
+
+        return result.toString();
+    }
+
+    @Override
+    public String visitAssignmentExpression(AssignmentExpression assignmentExpression) {
+        StringBuilder result = new StringBuilder();
+
+        result.append("AssignmentExpression\n")
+                .append(indent);
+
+        incrementIndent(true);
+        result.append("├─▶Identifier ")
+                .append(assignmentExpression.token.lexeme)
+                .append("\n");
+        decrementIndent();
+
+        result.append(indent);
+
+        incrementIndent(false);
+        result.append("╰─▶")
+                .append(assignmentExpression.expression.accept(this));
+        decrementIndent();
+
+        return result.toString();
+    }
+
+    @Override
+    public String visitLogicalExpression(LogicalExpression logicalExpression) {
         return "";
     }
 
     @Override
     public String visitExpressionStatement(ExpressionStatement expressionStatement) {
-        return "";
+        StringBuilder result = new StringBuilder();
+
+        result.append("ExpressionStatement\n")
+                .append(indent);
+
+        incrementIndent(false);
+        result.append("╰─▶").append(expressionStatement.expression.accept(this));
+        decrementIndent();
+
+        return result.toString();
     }
 
     @Override
     public String visitPrintStatement(PrintStatement printStatement) {
-        return "";
+        StringBuilder result = new StringBuilder();
+
+        result.append("PrintStatement\n")
+                .append(indent);
+
+        incrementIndent(false);
+        result.append("╰─▶").append(printStatement.expression.accept(this));
+        decrementIndent();
+
+        return result.toString();
     }
 
     @Override
     public String visitVariableStatement(VariableStatement variableStatement) {
+        StringBuilder result = new StringBuilder();
+
+        result.append("VariableStatement\n")
+                .append(indent);
+
+        if (variableStatement.expression != null) {
+            incrementIndent(true);
+            result.append("├─▶Identifier ")
+                    .append(variableStatement.token.lexeme)
+                    .append("\n");
+            decrementIndent();
+
+            result.append(indent);
+
+            incrementIndent(false);
+            result.append("╰─▶").append(variableStatement.expression.accept(this));
+            decrementIndent();
+        } else {
+            incrementIndent(true);
+            result.append("╰─▶Identifier ")
+                    .append(variableStatement.token.lexeme);
+            decrementIndent();
+        }
+
+        return result.toString();
+    }
+
+    @Override
+    public String visitBlockStatement(BlockStatement blockStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitIfStatement(IfStatement ifStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitWhileStatement(WhileStatement whileStatement) {
         return "";
     }
 
