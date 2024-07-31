@@ -12,6 +12,7 @@ import java.util.List;
 public class Parser {
     private final List<Token> tokens;
     private int current = 0;
+    private int loopCount = 0;
 
     public List<Statement> parse() {
         List<Statement> statements = new ArrayList<>();
@@ -48,6 +49,8 @@ public class Parser {
         if (matchToken(TokenType.IF)) return parseIfStatement();
         if (matchToken(TokenType.PRINT)) return parsePrintStatement();
         if (matchToken(TokenType.FOR)) return parseForStatement();
+        if (matchToken(TokenType.BREAK)) return parseBreakStatement();
+        if (matchToken(TokenType.CONTINUE)) return parseContinueStatement();
         if (matchToken(TokenType.WHILE)) return parseWhileStatement();
         if (matchToken(TokenType.LEFT_BRACE)) return new BlockStatement(parseBlock());
 
@@ -116,7 +119,7 @@ public class Parser {
         if (condition == null)
             condition = new LiteralExpression(true, TokenType.TRUE);
 
-        body = new WhileStatement(condition, body);
+        body = new WhileStatement(condition, body, increment);
 
         if (initializer != null)
             body = new BlockStatement(List.of(initializer, body));
@@ -124,12 +127,36 @@ public class Parser {
         return body;
     }
 
+    private Statement parseBreakStatement() {
+        Token breakToken = previousToken();
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after 'break'");
+
+        if (!isInLoop())
+            throw error(breakToken, "'break' is not allowed outside of a loop");
+
+        return new BreakStatement();
+    }
+
+    private Statement parseContinueStatement() {
+        Token breakToken = previousToken();
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after 'continue'");
+
+        if (!isInLoop())
+            throw error(breakToken, "'continue' is not allowed outside of a loop");
+
+        return new ContinueStatement();
+    }
+
     private Statement parseWhileStatement() {
         consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'while'");
         Expression condition = parseExpression();
         consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after condition");
+
+        incrementLoopCount();
         Statement body = parseStatement();
-        return new WhileStatement(condition, body);
+        decrementLoopCount();
+
+        return new WhileStatement(condition, body, null);
     }
 
     private Statement parseExpressionStatement() {
@@ -355,5 +382,21 @@ public class Parser {
 
     private Token previousToken() {
         return tokens.get(current - 1);
+    }
+
+    private void incrementLoopCount() {
+        ++loopCount;
+    }
+
+    private void decrementLoopCount() {
+        if (loopCount == 0) {
+            return;
+        }
+
+        --loopCount;
+    }
+
+    private boolean isInLoop() {
+        return loopCount > 0;
     }
 }

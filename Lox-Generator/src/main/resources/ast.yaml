@@ -118,3 +118,12 @@ statements:
 
       - type: Statement
         name: body
+
+      - type: Expression
+        name: increment
+
+  - name: BreakStatement
+    parentClass: Statement
+
+  - name: ContinueStatement
+    parentClass: Statement

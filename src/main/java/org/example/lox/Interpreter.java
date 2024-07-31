@@ -3,6 +3,8 @@ package org.example.lox;
 import org.example.lox.ast.Visitor;
 import org.example.lox.ast.expression.*;
 import org.example.lox.ast.statement.*;
+import org.example.lox.exception.BreakLoop;
+import org.example.lox.exception.ContinueLoop;
 import org.example.lox.exception.RuntimeError;
 
 import java.util.List;
@@ -214,10 +216,29 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement) {
-        while (isTrue(evaluate(whileStatement.condition)))
-            execute(whileStatement.body);
+        while (isTrue(evaluate(whileStatement.condition))) {
+            try {
+                execute(whileStatement.body);
+            } catch (BreakLoop ignored) {
+                break;
+            } catch (ContinueLoop ignored) {
+                if (whileStatement.increment != null) {
+                    evaluate(whileStatement.increment);
+                }
+            }
+        }
 
         return null;
+    }
+
+    @Override
+    public Object visitBreakStatement(BreakStatement breakStatement) {
+        throw new BreakLoop();
+    }
+
+    @Override
+    public Object visitContinueStatement(ContinueStatement continueStatement) {
+        throw new ContinueLoop();
     }
 
     private void executeBlock(List<Statement> statements, Environment environment) {
@@ -227,6 +248,7 @@ public class Interpreter implements Visitor<Object> {
 
             for (Statement statement : statements)
                 execute(statement);
+
         } finally {
             this.environment = previous;
         }

@@ -18,4 +18,6 @@ public interface Visitor<R>  {
 	public R visitBlockStatement(BlockStatement blockStatement);
 	public R visitIfStatement(IfStatement ifStatement);
 	public R visitWhileStatement(WhileStatement whileStatement);
+	public R visitBreakStatement(BreakStatement breakStatement);
+	public R visitContinueStatement(ContinueStatement continueStatement);
 }

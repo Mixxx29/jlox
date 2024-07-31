@@ -40,6 +40,8 @@ public enum TokenType {
     ELSE,
     WHILE,
     FOR,
+    BREAK,
+    CONTINUE,
 
     AND,
     OR,

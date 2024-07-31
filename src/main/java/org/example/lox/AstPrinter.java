@@ -198,6 +198,16 @@ public class AstPrinter implements Visitor<String> {
         return "";
     }
 
+    @Override
+    public String visitBreakStatement(BreakStatement breakStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitContinueStatement(ContinueStatement continueStatement) {
+        return "";
+    }
+
     private void incrementIndent(boolean special) {
         int startIndex = indent.length();
 

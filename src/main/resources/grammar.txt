@@ -7,12 +7,16 @@ statement            →  expressionStatement
                      |  whileStatement
                      |  forStatement
                      |  printStatement
+                     |  breakStatement
+                     |  continueStatement
 
 block                →  "{" declaration* "}"
 ifStatement          →  "if" "(" expression ")" statement ( "else" statement )?
 whileStatement       →  "while" "(" expression ")" statement
 forStatement         →  "for" "(" (variableDeclaration | expressionStatement | ";") expression? ";" expression? ";" ")" statement
 printStatement       →  "print" expression ";"
+breakStatement       →  "break" ";"
+continueStatement    →  "continue" ";"
 expressionStatement  →  expression ";"
 expression           →  assignment
 assignment           →  IDENTIFIER "=" assignment | logicOr
