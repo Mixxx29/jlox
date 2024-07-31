@@ -1,16 +1,10 @@
-var i = 0;
-while (i < 5) {
-    i = i + 1;
 
-    for (var j = 0; j < 3; j = j + 1) {
-        if (j == 1)
-            continue;
-
-        print "j: " + j;
+fun delay(delayTime) {
+    var a = 0;
+    for (var i = 0; i < delayTime; i = i + 1) {
+        var a = a * a;
     }
-
-    if (i == 3)
-        continue;
-
-    print "i: " +  i;
 }
+
+delay(10000000);
+print "Finished execution after: " + clock() + "ms";

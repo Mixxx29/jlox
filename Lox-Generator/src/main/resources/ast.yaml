@@ -67,6 +67,18 @@ expressions:
       - type: Expression
         name: right
 
+  - name: CallExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: callee
+
+      - type: Token
+        name: rightParenthesis
+
+      - type: List<Expression>
+        name: arguments
+
 baseStatement:
   name: Statement
 
@@ -127,3 +139,15 @@ statements:
 
   - name: ContinueStatement
     parentClass: Statement
+
+  - name: FunctionStatement
+    parentClass: Statement
+    fields:
+      - type: Token
+        name: token
+
+      - type: List<Token>
+        name: parameters
+
+      - type: List<Statement>
+        name: body

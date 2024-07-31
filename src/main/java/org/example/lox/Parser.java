@@ -24,14 +24,33 @@ public class Parser {
 
     private Statement parseDeclaration() {
         try {
-            if (matchToken(TokenType.VAR))
-                return parseVariableDeclaration();
+            if (matchToken(TokenType.FUN)) return parseFunction("function");
+            if (matchToken(TokenType.VAR)) return parseVariableDeclaration();
 
             return parseStatement();
         } catch (ParseErrorException error) {
             synchronize();
             return null;
         }
+    }
+
+    private FunctionStatement parseFunction(String kind) {
+        Token token = consumeToken(TokenType.IDENTIFIER, "Expected " + kind + " name");
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after " + kind + " name");
+        List<Token> parameters = new ArrayList<>();
+        if (!checkTokenType(TokenType.RIGHT_PARENTHESIS)) {
+            do {
+                if (parameters.size() >= 255)
+                    error(peekToken(), "Can't have more than 255 parameters");
+
+                parameters.add(consumeToken(TokenType.IDENTIFIER, "Expected parameter name"));
+            } while (matchToken(TokenType.COMMA));
+        }
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after parameters");
+
+        consumeToken(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body");
+        List<Statement> body = parseBlock();
+        return new FunctionStatement(token, parameters, body);
     }
 
     private Statement parseVariableDeclaration() {
@@ -111,7 +130,9 @@ public class Parser {
 
         consumeToken(TokenType.RIGHT_PARENTHESIS, " Expected ')' at the end of 'for' clause");
 
+        incrementLoopCount();
         Statement body = parseStatement();
+        decrementLoopCount();
 
         if (increment != null)
             body = new BlockStatement(List.of(body, new ExpressionStatement(increment)));
@@ -125,6 +146,18 @@ public class Parser {
             body = new BlockStatement(List.of(initializer, body));
 
         return body;
+    }
+
+    private Statement parseWhileStatement() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'while'");
+        Expression condition = parseExpression();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after condition");
+
+        incrementLoopCount();
+        Statement body = parseStatement();
+        decrementLoopCount();
+
+        return new WhileStatement(condition, body, null);
     }
 
     private Statement parseBreakStatement() {
@@ -145,18 +178,6 @@ public class Parser {
             throw error(breakToken, "'continue' is not allowed outside of a loop");
 
         return new ContinueStatement();
-    }
-
-    private Statement parseWhileStatement() {
-        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'while'");
-        Expression condition = parseExpression();
-        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after condition");
-
-        incrementLoopCount();
-        Statement body = parseStatement();
-        decrementLoopCount();
-
-        return new WhileStatement(condition, body, null);
     }
 
     private Statement parseExpressionStatement() {
@@ -288,11 +309,40 @@ public class Parser {
         };
 
         if (!matchToken(validTokenTypes))
-            return parsePrimary();
+            return parseCall();
 
         Token operator = previousToken();
         Expression right = parseUnary();
         return new UnaryExpression(operator, right);
+    }
+
+    private Expression parseCall() {
+        Expression expression = parsePrimary();
+
+        while (true) {
+            if (matchToken(TokenType.LEFT_PARENTHESIS)) {
+                expression = parseArguments(expression);
+            } else {
+                break;
+            }
+        }
+
+        return expression;
+    }
+
+    private Expression parseArguments(Expression callee) {
+        List<Expression> arguments = new ArrayList<>();
+        if (!checkTokenType(TokenType.RIGHT_PARENTHESIS)) {
+            do {
+                if (arguments.size() >= 255)
+                    error(peekToken(), "Can't have more than 255 arguments");
+
+                arguments.add(parseExpression());
+            } while (matchToken(TokenType.COMMA));
+        }
+
+        Token rightParenthesis = consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
+        return new CallExpression(callee, rightParenthesis, arguments);
     }
 
     private Expression parsePrimary() {

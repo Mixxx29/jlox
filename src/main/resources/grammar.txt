@@ -1,6 +1,9 @@
 program              →  declaration* EOF
-declaration          →  variableDeclaration | statement
+declaration          →  variableDeclaration | functionDeclaration | statement
 variableDeclaration  →  "var" IDENTIFIER ( "=" expression )? ";"
+functionDeclaration  →  "fun" function
+function             →  IDENTIFIER "(" parameters? ")" block
+parameters           →  IDENTIFIER ( "," IDENTIFIER )*
 statement            →  expressionStatement
                      |  block
                      |  ifStatement
@@ -26,5 +29,7 @@ equality             →  comparison ( ( "!=" | "==" ) comparison )*
 comparison           →  term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term                 →  factor ( ( "-" | "+" ) factor )*
 factor               →  unary ( ( "/" | "*" ) unary )*
-unary                →  ( "!" | "-" ) unary | primary
+unary                →  ( "!" | "-" ) unary | call
+call                 →  primary ( "(" arguments? ")" )*
+arguments            →  expression ( "," expression )*
 primary              →  IDENTIFIER | NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"

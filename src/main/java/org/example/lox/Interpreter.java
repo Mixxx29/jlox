@@ -7,13 +7,36 @@ import org.example.lox.exception.BreakLoop;
 import org.example.lox.exception.ContinueLoop;
 import org.example.lox.exception.RuntimeError;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements Visitor<Object> {
 
-    private Environment environment = new Environment(null);
+    final Environment globals = new Environment(null);
+    private Environment environment = globals;
+    private long startTime;
+
+    public Interpreter() {
+        globals.define("clock", new LoxCallable() {
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) (System.currentTimeMillis() - startTime);
+            }
+
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public String toString() {
+                return "<native_function>";
+            }
+        });
+    }
 
     public void interpret(List<Statement> statements) {
+        startTime = System.currentTimeMillis();
         try {
             if (statements.size() == 1 && statements.get(0) instanceof ExpressionStatement expressionStatement) {
                 System.out.println(stringify(expressionStatement.expression.accept(this)));
@@ -175,6 +198,29 @@ public class Interpreter implements Visitor<Object> {
     }
 
     @Override
+    public Object visitCallExpression(CallExpression callExpression) {
+        Object callee = evaluate(callExpression.callee);
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expression argument : callExpression.arguments) {
+            arguments.add(evaluate(argument));
+        }
+
+        if (!(callee instanceof LoxCallable))
+            throw new RuntimeError(callExpression.rightParenthesis, "Not a function");
+
+        LoxCallable function = (LoxCallable) callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(
+                    callExpression.rightParenthesis,
+                    "Expected " + function.arity() + " arguments, but got " + arguments.size()
+            );
+        }
+
+        return function.call(this, arguments);
+    }
+
+    @Override
     public Object visitExpressionStatement(ExpressionStatement expressionStatement) {
         evaluate(expressionStatement.expression);
         return null;
@@ -241,7 +287,14 @@ public class Interpreter implements Visitor<Object> {
         throw new ContinueLoop();
     }
 
-    private void executeBlock(List<Statement> statements, Environment environment) {
+    @Override
+    public Object visitFunctionStatement(FunctionStatement functionStatement) {
+        LoxFunction function = new LoxFunction(functionStatement);
+        environment.define(functionStatement.token.lexeme, function);
+        return null;
+    }
+
+    public void executeBlock(List<Statement> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;
