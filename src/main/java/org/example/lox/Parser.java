@@ -37,6 +37,15 @@ public class Parser {
     private FunctionStatement parseFunction(String kind) {
         Token token = consumeToken(TokenType.IDENTIFIER, "Expected " + kind + " name");
         consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after " + kind + " name");
+        List<Token> parameters = parseParameters();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after parameters");
+
+        consumeToken(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body");
+        List<Statement> body = parseBlock();
+        return new FunctionStatement(token, parameters, body);
+    }
+
+    private List<Token> parseParameters() {
         List<Token> parameters = new ArrayList<>();
         if (!checkTokenType(TokenType.RIGHT_PARENTHESIS)) {
             do {
@@ -46,11 +55,7 @@ public class Parser {
                 parameters.add(consumeToken(TokenType.IDENTIFIER, "Expected parameter name"));
             } while (matchToken(TokenType.COMMA));
         }
-        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after parameters");
-
-        consumeToken(TokenType.LEFT_BRACE, "Expected '{' before " + kind + " body");
-        List<Statement> body = parseBlock();
-        return new FunctionStatement(token, parameters, body);
+        return parameters;
     }
 
     private Statement parseVariableDeclaration() {
@@ -69,6 +74,7 @@ public class Parser {
         if (matchToken(TokenType.PRINT)) return parsePrintStatement();
         if (matchToken(TokenType.FOR)) return parseForStatement();
         if (matchToken(TokenType.BREAK)) return parseBreakStatement();
+        if (matchToken(TokenType.RETURN)) return parseReturnStatement();
         if (matchToken(TokenType.CONTINUE)) return parseContinueStatement();
         if (matchToken(TokenType.WHILE)) return parseWhileStatement();
         if (matchToken(TokenType.LEFT_BRACE)) return new BlockStatement(parseBlock());
@@ -170,6 +176,16 @@ public class Parser {
         return new BreakStatement();
     }
 
+    private Statement parseReturnStatement() {
+        Token keyword = previousToken();
+        Expression value = null;
+        if (!checkTokenType(TokenType.SEMICOLON))
+            value = parseExpression();
+
+        consumeToken(TokenType.SEMICOLON, "Expected ';' after return value");
+        return new ReturnStatement(keyword, value);
+    }
+
     private Statement parseContinueStatement() {
         Token breakToken = previousToken();
         consumeToken(TokenType.SEMICOLON, "Expected ';' after 'continue'");
@@ -190,7 +206,21 @@ public class Parser {
         return parseAssignment();
     }
 
+    private Expression parseLambdaExpression() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'lambda'");
+        List<Token> parameters = parseParameters();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
+        consumeToken(TokenType.POINTER, "Expected '->' after ')'");
+        List<Statement> statements;
+        consumeToken(TokenType.LEFT_BRACE, "Expected '{' after '->'");
+        statements = parseBlock();
+        return new LambdaExpression(parameters, statements);
+    }
+
     private Expression parseAssignment() {
+        if (matchToken(TokenType.LAMBDA))
+            return parseLambdaExpression();
+
         Expression expression = parseOr();
 
         if (matchToken(TokenType.EQUAL)) {
@@ -321,7 +351,9 @@ public class Parser {
 
         while (true) {
             if (matchToken(TokenType.LEFT_PARENTHESIS)) {
-                expression = parseArguments(expression);
+                List<Expression> arguments = parseArguments();
+                Token rightParenthesis = consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
+                return new CallExpression(expression, rightParenthesis, arguments);
             } else {
                 break;
             }
@@ -330,7 +362,7 @@ public class Parser {
         return expression;
     }
 
-    private Expression parseArguments(Expression callee) {
+    private List<Expression> parseArguments() {
         List<Expression> arguments = new ArrayList<>();
         if (!checkTokenType(TokenType.RIGHT_PARENTHESIS)) {
             do {
@@ -341,8 +373,7 @@ public class Parser {
             } while (matchToken(TokenType.COMMA));
         }
 
-        Token rightParenthesis = consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
-        return new CallExpression(callee, rightParenthesis, arguments);
+        return arguments;
     }
 
     private Expression parsePrimary() {
@@ -428,6 +459,10 @@ public class Parser {
 
     private Token peekToken() {
         return tokens.get(current);
+    }
+
+    private Token peekToken(int offset) {
+        return tokens.get(current + offset);
     }
 
     private Token previousToken() {

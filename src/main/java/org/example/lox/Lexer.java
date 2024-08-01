@@ -33,6 +33,7 @@ public class Lexer {
         keywords.put("while", TokenType.WHILE);
         keywords.put("break", TokenType.BREAK);
         keywords.put("continue", TokenType.CONTINUE);
+        keywords.put("lambda", TokenType.LAMBDA);
     }
 
     private int start = 0;
@@ -64,7 +65,7 @@ public class Lexer {
             case ',' -> addToken(TokenType.COMMA);
             case ';' -> addToken(TokenType.SEMICOLON);
             case '+' -> addToken(TokenType.PLUS);
-            case '-' -> addToken(TokenType.MINUS);
+            case '-' -> scanMinusToken();
             case '*' -> addToken(TokenType.ASTERISK);
             case '/' -> scanComment();
             case '!' -> addToken(match('=') ? TokenType.EXCLAMATION_MARK_EQUAL : TokenType.EXCLAMATION_MARK);
@@ -77,6 +78,15 @@ public class Lexer {
             case '\n' -> ++line;
             default -> handleDefault(c);
         }
+    }
+
+    private void scanMinusToken() {
+        if (match('>')) {
+            addToken(TokenType.POINTER);
+            return;
+        }
+
+        addToken(TokenType.MINUS);
     }
 
     private void scanComment() {

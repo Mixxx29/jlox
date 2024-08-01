@@ -12,6 +12,7 @@ statement            →  expressionStatement
                      |  printStatement
                      |  breakStatement
                      |  continueStatement
+                     |  returnStatement
 
 block                →  "{" declaration* "}"
 ifStatement          →  "if" "(" expression ")" statement ( "else" statement )?
@@ -20,11 +21,13 @@ forStatement         →  "for" "(" (variableDeclaration | expressionStatement |
 printStatement       →  "print" expression ";"
 breakStatement       →  "break" ";"
 continueStatement    →  "continue" ";"
+returnStatement      →  "return" expression? ";"
 expressionStatement  →  expression ";"
 expression           →  assignment
-assignment           →  IDENTIFIER "=" assignment | logicOr
-logicOr              →  logicAnd ( "or" logicAnd )* ;
-logicAnd             →  equality ( "and" equality )* ;
+assignment           →  IDENTIFIER "=" assignment | logicOr | lambdaExpression
+lambdaExpression     →  "lambda" "(" parameters? ")" "->" statement
+logicOr              →  logicAnd ( "or" logicAnd )*
+logicAnd             →  equality ( "and" equality )*
 equality             →  comparison ( ( "!=" | "==" ) comparison )*
 comparison           →  term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term                 →  factor ( ( "-" | "+" ) factor )*

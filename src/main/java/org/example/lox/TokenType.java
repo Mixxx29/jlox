@@ -43,6 +43,8 @@ public enum TokenType {
     BREAK,
     CONTINUE,
 
+    POINTER,
+
     AND,
     OR,
 
@@ -54,6 +56,7 @@ public enum TokenType {
     FUN,
     RETURN,
     PRINT,
+    LAMBDA,
 
     EOF
 }

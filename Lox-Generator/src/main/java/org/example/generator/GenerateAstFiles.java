@@ -43,6 +43,10 @@ public class GenerateAstFiles {
         String baseExpressionContent = generateClassContent(config.getPackage() + ".expression", config.getBaseExpression(), null);
         createClassFile(baseDirectoryPath + "\\expression", config.getBaseExpression().getName(), baseExpressionContent);
 
+        // Generate base statement class file
+        String baseStatementContent = generateClassContent(config.getPackage() + ".statement", config.getBaseStatement(), null);
+        createClassFile(baseDirectoryPath + "\\statement", config.getBaseStatement().getName(), baseStatementContent);
+
         // Generate expressions files
         for (ClassConfig classConfig : config.getExpressions()) {
             String classContent = generateClassContent(
@@ -52,10 +56,6 @@ public class GenerateAstFiles {
             );
             createClassFile(baseDirectoryPath + "\\expression", classConfig.getName(), classContent);
         }
-
-        // Generate base statement class file
-        String baseStatementContent = generateClassContent(config.getPackage() + ".statement", config.getBaseStatement(), null);
-        createClassFile(baseDirectoryPath + "\\statement", config.getBaseStatement().getName(), baseStatementContent);
 
         // Generate statements files
         for (ClassConfig classConfig : config.getStatements()) {
@@ -296,7 +296,7 @@ public class GenerateAstFiles {
             for (FieldConfig fieldConfig : classConfig.getFields()) {
                 String className = fieldConfig.getType();
                 String namePart = className.split("<")[0];
-                
+
                 String typePackage = getPackageName(namePart);
                 if (typePackage != null && !typePackage.equals(packageName)) {
                     insertImport(builder, typePackage + "." + namePart);

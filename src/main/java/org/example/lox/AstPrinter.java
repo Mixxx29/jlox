@@ -132,6 +132,11 @@ public class AstPrinter implements Visitor<String> {
     }
 
     @Override
+    public String visitLambdaExpression(LambdaExpression lambdaExpression) {
+        return "";
+    }
+
+    @Override
     public String visitExpressionStatement(ExpressionStatement expressionStatement) {
         StringBuilder result = new StringBuilder();
 
@@ -215,6 +220,11 @@ public class AstPrinter implements Visitor<String> {
 
     @Override
     public String visitFunctionStatement(FunctionStatement functionStatement) {
+        return "";
+    }
+
+    @Override
+    public String visitReturnStatement(ReturnStatement returnStatement) {
         return "";
     }
 

@@ -79,6 +79,17 @@ expressions:
       - type: List<Expression>
         name: arguments
 
+  - name: LambdaExpression
+    parentClass: Expression
+    fields:
+      - type: List<Token>
+        name: parameters
+
+      - type: List<Statement>
+        name: body
+
+########################################################################################################################
+
 baseStatement:
   name: Statement
 
@@ -151,3 +162,12 @@ statements:
 
       - type: List<Statement>
         name: body
+
+  - name: ReturnStatement
+    parentClass: Statement
+    fields:
+      - type: Token
+        name: keyword
+
+      - type: Expression
+        name: value

@@ -1,10 +1,7 @@
 
-fun delay(delayTime) {
-    var a = 0;
-    for (var i = 0; i < delayTime; i = i + 1) {
-        var a = a * a;
-    }
-}
+var foo = lambda (a) -> { return "Hello " + a; };
 
-delay(10000000);
-print "Finished execution after: " + clock() + "ms";
+{
+    var a = 5;
+    print foo(a + 5 * 13);
+}

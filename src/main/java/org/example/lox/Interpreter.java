@@ -3,8 +3,9 @@ package org.example.lox;
 import org.example.lox.ast.Visitor;
 import org.example.lox.ast.expression.*;
 import org.example.lox.ast.statement.*;
-import org.example.lox.exception.BreakLoop;
-import org.example.lox.exception.ContinueLoop;
+import org.example.lox.exception.Break;
+import org.example.lox.exception.Continue;
+import org.example.lox.exception.Return;
 import org.example.lox.exception.RuntimeError;
 
 import java.util.ArrayList;
@@ -206,10 +207,9 @@ public class Interpreter implements Visitor<Object> {
             arguments.add(evaluate(argument));
         }
 
-        if (!(callee instanceof LoxCallable))
+        if (!(callee instanceof LoxCallable function))
             throw new RuntimeError(callExpression.rightParenthesis, "Not a function");
 
-        LoxCallable function = (LoxCallable) callee;
         if (arguments.size() != function.arity()) {
             throw new RuntimeError(
                     callExpression.rightParenthesis,
@@ -218,6 +218,17 @@ public class Interpreter implements Visitor<Object> {
         }
 
         return function.call(this, arguments);
+    }
+
+    @Override
+    public Object visitLambdaExpression(LambdaExpression lambdaExpression) {
+        FunctionStatement functionStatement = new FunctionStatement(
+                null,
+                lambdaExpression.parameters,
+                lambdaExpression.body
+        );
+
+        return new LoxFunction(functionStatement, environment);
     }
 
     @Override
@@ -265,9 +276,9 @@ public class Interpreter implements Visitor<Object> {
         while (isTrue(evaluate(whileStatement.condition))) {
             try {
                 execute(whileStatement.body);
-            } catch (BreakLoop ignored) {
+            } catch (Break ignored) {
                 break;
-            } catch (ContinueLoop ignored) {
+            } catch (Continue ignored) {
                 if (whileStatement.increment != null) {
                     evaluate(whileStatement.increment);
                 }
@@ -279,19 +290,28 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitBreakStatement(BreakStatement breakStatement) {
-        throw new BreakLoop();
+        throw new Break();
     }
 
     @Override
     public Object visitContinueStatement(ContinueStatement continueStatement) {
-        throw new ContinueLoop();
+        throw new Continue();
     }
 
     @Override
     public Object visitFunctionStatement(FunctionStatement functionStatement) {
-        LoxFunction function = new LoxFunction(functionStatement);
+        LoxFunction function = new LoxFunction(functionStatement, environment);
         environment.define(functionStatement.token.lexeme, function);
         return null;
+    }
+
+    @Override
+    public Object visitReturnStatement(ReturnStatement returnStatement) {
+        Object value = null;
+        if (returnStatement.value != null)
+            value = evaluate(returnStatement.value);
+
+        throw new Return(value);
     }
 
     public void executeBlock(List<Statement> statements, Environment environment) {
