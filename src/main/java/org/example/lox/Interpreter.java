@@ -9,12 +9,15 @@ import org.example.lox.exception.Return;
 import org.example.lox.exception.RuntimeError;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Interpreter implements Visitor<Object> {
 
     final Environment globals = new Environment(null);
     private Environment environment = globals;
+    private final Map<Expression, Integer> locals = new HashMap<>();
     private long startTime;
 
     public Interpreter() {
@@ -175,13 +178,20 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitVariableExpression(VariableExpression variableExpression) {
-        return environment.get(variableExpression.token);
+        return lookUpVariable(variableExpression.token, variableExpression);
     }
 
     @Override
     public Object visitAssignmentExpression(AssignmentExpression assignmentExpression) {
         Object value = evaluate(assignmentExpression.expression);
-        environment.assign(assignmentExpression.token, value);
+
+        Integer distance = locals.get(assignmentExpression);
+        if (distance != null) {
+            environment.assignAt(distance, assignmentExpression.token, value);
+        } else {
+            globals.assign(assignmentExpression.token, value);
+        }
+
         return value;
     }
 
@@ -360,5 +370,17 @@ public class Interpreter implements Visitor<Object> {
         }
 
         return value.toString();
+    }
+
+    private Object lookUpVariable(Token token, VariableExpression variableExpression) {
+        Integer distance = locals.get(variableExpression);
+        if (distance != null)
+            return environment.getAt(distance, token.lexeme);
+
+        return globals.get(token);
+    }
+
+    public void resolve(Expression expression, int depth) {
+        locals.put(expression, depth);
     }
 }
