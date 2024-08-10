@@ -231,6 +231,28 @@ public class Interpreter implements Visitor<Object> {
     }
 
     @Override
+    public Object visitGetExpression(GetExpression getExpression) {
+        Object object = evaluate(getExpression.object);
+        if (object instanceof LoxInstance loxInstance)
+            return loxInstance.get(getExpression.name);
+
+        throw new RuntimeError(getExpression.name, "Only instances can have properties");
+    }
+
+    @Override
+    public Object visitSetExpression(SetExpression setExpression) {
+        Object object = evaluate(setExpression.object);
+
+        if (object instanceof LoxInstance loxInstance) {
+            Object value = evaluate(setExpression.value);
+            loxInstance.set(setExpression.name, value);
+            return value;
+        }
+
+        throw new RuntimeError(setExpression.name, "Only instances can have fields");
+    }
+
+    @Override
     public Object visitLambdaExpression(LambdaExpression lambdaExpression) {
         FunctionStatement functionStatement = new FunctionStatement(
                 null,
@@ -322,6 +344,21 @@ public class Interpreter implements Visitor<Object> {
             value = evaluate(returnStatement.value);
 
         throw new Return(value);
+    }
+
+    @Override
+    public Object visitClassStatement(ClassStatement classStatement) {
+        environment.define(classStatement.name.lexeme, null);
+
+        Map<String, LoxFunction> methods = new HashMap<>();
+        for (FunctionStatement method : classStatement.methods) {
+            LoxFunction function = new LoxFunction(method, environment);
+            methods.put(method.token.lexeme, function);
+        }
+
+        LoxClass clazz = new LoxClass(classStatement.name.lexeme, methods);
+        environment.assign(classStatement.name, clazz);
+        return null;
     }
 
     public void executeBlock(List<Statement> statements, Environment environment) {

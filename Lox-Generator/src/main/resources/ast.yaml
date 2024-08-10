@@ -79,6 +79,27 @@ expressions:
       - type: List<Expression>
         name: arguments
 
+  - name: GetExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: object
+
+      - type: Token
+        name: name
+
+  - name: SetExpression
+    parentClass: Expression
+    fields:
+      - type: Expression
+        name: object
+
+      - type: Token
+        name: name
+
+      - type: Expression
+        name: value
+
   - name: LambdaExpression
     parentClass: Expression
     fields:
@@ -171,3 +192,12 @@ statements:
 
       - type: Expression
         name: value
+
+  - name: ClassStatement
+    parentClass: Statement
+    fields:
+      - type: Token
+        name: name
+
+      - type: List<FunctionStatement>
+        name: methods

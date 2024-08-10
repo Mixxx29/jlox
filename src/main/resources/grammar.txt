@@ -1,5 +1,6 @@
 program              →  declaration* EOF
-declaration          →  variableDeclaration | functionDeclaration | statement
+declaration          →  classDeclaration | variableDeclaration | functionDeclaration | statement
+classDeclaration     →  "class" IDENTIFIER "{" function* "}"
 variableDeclaration  →  "var" IDENTIFIER ( "=" expression )? ";"
 functionDeclaration  →  "fun" function
 function             →  IDENTIFIER "(" parameters? ")" block
@@ -24,7 +25,7 @@ continueStatement    →  "continue" ";"
 returnStatement      →  "return" expression? ";"
 expressionStatement  →  expression ";"
 expression           →  assignment
-assignment           →  IDENTIFIER "=" assignment | logicOr | lambdaExpression
+assignment           →  ( call "." )? IDENTIFIER "=" assignment | logicOr | lambdaExpression
 lambdaExpression     →  "lambda" "(" parameters? ")" "->" statement
 logicOr              →  logicAnd ( "or" logicAnd )*
 logicAnd             →  equality ( "and" equality )*
@@ -33,6 +34,6 @@ comparison           →  term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term                 →  factor ( ( "-" | "+" ) factor )*
 factor               →  unary ( ( "/" | "*" ) unary )*
 unary                →  ( "!" | "-" ) unary | call
-call                 →  primary ( "(" arguments? ")" )*
+call                 →  primary ( "(" arguments? ")" | "." IDENTIFIER )*
 arguments            →  expression ( "," expression )*
 primary              →  IDENTIFIER | NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"

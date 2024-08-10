@@ -74,6 +74,19 @@ public class Resolver implements Visitor<Void> {
     }
 
     @Override
+    public Void visitGetExpression(GetExpression getExpression) {
+        resolve(getExpression.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpression(SetExpression setExpression) {
+        resolve(setExpression.value);
+        resolve(setExpression.object);
+        return null;
+    }
+
+    @Override
     public Void visitLambdaExpression(LambdaExpression lambdaExpression) {
         resolveLambda(lambdaExpression, FunctionType.FUNCTION);
         return null;
@@ -81,7 +94,7 @@ public class Resolver implements Visitor<Void> {
 
     @Override
     public Void visitExpressionStatement(ExpressionStatement expressionStatement) {
-        resolve(expressionStatement);
+        resolve(expressionStatement.expression);
         return null;
     }
 
@@ -151,6 +164,19 @@ public class Resolver implements Visitor<Void> {
 
         if (returnStatement.value != null)
             resolve(returnStatement.value);
+
+        return null;
+    }
+
+    @Override
+    public Void visitClassStatement(ClassStatement classStatement) {
+        declare(classStatement.name);
+        define(classStatement.name);
+
+        for (FunctionStatement method : classStatement.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            resolveFunction(method, FunctionType.METHOD);
+        }
 
         return null;
     }

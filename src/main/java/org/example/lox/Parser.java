@@ -24,6 +24,7 @@ public class Parser {
 
     private Statement parseDeclaration() {
         try {
+            if (matchToken(TokenType.CLASS)) return parseClass();
             if (matchToken(TokenType.FUN)) return parseFunction("function");
             if (matchToken(TokenType.VAR)) return parseVariableDeclaration();
 
@@ -32,6 +33,19 @@ public class Parser {
             synchronize();
             return null;
         }
+    }
+
+    private Statement parseClass() {
+        Token name = consumeToken(TokenType.IDENTIFIER, "Expected class name");
+        consumeToken(TokenType.LEFT_BRACE, "Expected '{' after class name");
+
+        List<FunctionStatement> methods = new ArrayList<>();
+        while (!checkTokenType(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(parseFunction("method"));
+        }
+
+        consumeToken(TokenType.RIGHT_BRACE, "Expected '}' after class body");
+        return new ClassStatement(name, methods);
     }
 
     private FunctionStatement parseFunction(String kind) {
@@ -230,6 +244,8 @@ public class Parser {
             if (expression instanceof VariableExpression variableExpression) {
                 Token token = variableExpression.token;
                 return new AssignmentExpression(token, value);
+            } else if (expression instanceof GetExpression getExpression) {
+                return new SetExpression(getExpression.object, getExpression.name, value);
             }
 
             throw error(equalToken, "Invalid assignment target");
@@ -353,7 +369,10 @@ public class Parser {
             if (matchToken(TokenType.LEFT_PARENTHESIS)) {
                 List<Expression> arguments = parseArguments();
                 Token rightParenthesis = consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
-                return new CallExpression(expression, rightParenthesis, arguments);
+                expression = new CallExpression(expression, rightParenthesis, arguments);
+            } else if (matchToken(TokenType.DOT)) {
+                Token name = consumeToken(TokenType.IDENTIFIER, "Expected property name after '.'");
+                expression = new GetExpression(expression, name);
             } else {
                 break;
             }
@@ -459,10 +478,6 @@ public class Parser {
 
     private Token peekToken() {
         return tokens.get(current);
-    }
-
-    private Token peekToken(int offset) {
-        return tokens.get(current + offset);
     }
 
     private Token previousToken() {

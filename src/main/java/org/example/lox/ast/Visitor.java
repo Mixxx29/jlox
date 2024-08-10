@@ -12,6 +12,8 @@ public interface Visitor<R>  {
 	public R visitAssignmentExpression(AssignmentExpression assignmentExpression);
 	public R visitLogicalExpression(LogicalExpression logicalExpression);
 	public R visitCallExpression(CallExpression callExpression);
+	public R visitGetExpression(GetExpression getExpression);
+	public R visitSetExpression(SetExpression setExpression);
 	public R visitLambdaExpression(LambdaExpression lambdaExpression);
 
 	public R visitExpressionStatement(ExpressionStatement expressionStatement);
@@ -24,4 +26,5 @@ public interface Visitor<R>  {
 	public R visitContinueStatement(ContinueStatement continueStatement);
 	public R visitFunctionStatement(FunctionStatement functionStatement);
 	public R visitReturnStatement(ReturnStatement returnStatement);
+	public R visitClassStatement(ClassStatement classStatement);
 }
