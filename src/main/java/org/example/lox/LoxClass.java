@@ -5,11 +5,18 @@ import java.util.Map;
 
 public class LoxClass extends LoxInstance implements LoxCallable {
     public final String name;
+    final LoxClass superClass;
     private final Map<String, LoxFunction> methods;
 
-    public LoxClass(String name, Map<String, LoxFunction> methods, Map<Token, LoxFunction> classMethods) {
+    public LoxClass(
+            String name,
+            LoxClass superClass,
+            Map<String, LoxFunction> methods,
+            Map<Token, LoxFunction> classMethods
+    ) {
         super(null);
         this.name = name;
+        this.superClass = superClass;
         this.methods = methods;
 
         for (Map.Entry<Token, LoxFunction> entry : classMethods.entrySet())
@@ -43,6 +50,9 @@ public class LoxClass extends LoxInstance implements LoxCallable {
     public LoxFunction findMethod(String name) {
         if (methods.containsKey(name))
             return methods.get(name);
+
+        if (superClass != null)
+            return superClass.findMethod(name);
 
         return null;
     }

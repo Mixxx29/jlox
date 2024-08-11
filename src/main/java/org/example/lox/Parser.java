@@ -37,6 +37,13 @@ public class Parser {
 
     private Statement parseClass() {
         Token name = consumeToken(TokenType.IDENTIFIER, "Expected class name");
+
+        VariableExpression superclass = null;
+        if (matchToken(TokenType.LESS)) {
+            consumeToken(TokenType.IDENTIFIER, "Expected superclass name after '<'");
+            superclass = new VariableExpression(previousToken());
+        }
+
         consumeToken(TokenType.LEFT_BRACE, "Expected '{' after class name");
 
         List<FunctionStatement> methods = new ArrayList<>();
@@ -49,7 +56,7 @@ public class Parser {
         }
 
         consumeToken(TokenType.RIGHT_BRACE, "Expected '}' after class body");
-        return new ClassStatement(name, methods, classMethods);
+        return new ClassStatement(name, superclass, methods, classMethods);
     }
 
     private FunctionStatement parseFunction(String kind) {
@@ -411,6 +418,13 @@ public class Parser {
         if (matchToken(TokenType.NIL)) return new LiteralExpression(null, TokenType.NIL);
 
         if (matchToken(TokenType.THIS)) return new ThisExpression(previousToken());
+
+        if (matchToken(TokenType.SUPER)) {
+            Token keyword = previousToken();
+            consumeToken(TokenType.DOT, "Expected '.' after 'super'");
+            Token method = consumeToken(TokenType.IDENTIFIER, "Expected superclass method name after '.'");
+            return new SuperExpression(keyword, method);
+        }
 
         if (matchToken(TokenType.IDENTIFIER)) return new VariableExpression(previousToken());
 

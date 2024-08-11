@@ -15,6 +15,7 @@ public interface Visitor<R>  {
 	public R visitGetExpression(GetExpression getExpression);
 	public R visitSetExpression(SetExpression setExpression);
 	public R visitThisExpression(ThisExpression thisExpression);
+	public R visitSuperExpression(SuperExpression superExpression);
 	public R visitLambdaExpression(LambdaExpression lambdaExpression);
 
 	public R visitExpressionStatement(ExpressionStatement expressionStatement);

@@ -258,6 +258,11 @@ public class Interpreter implements Visitor<Object> {
     }
 
     @Override
+    public Object visitSuperExpression(SuperExpression superExpression) {
+        return null;
+    }
+
+    @Override
     public Object visitLambdaExpression(LambdaExpression lambdaExpression) {
         FunctionStatement functionStatement = new FunctionStatement(
                 null,
@@ -353,6 +358,13 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitClassStatement(ClassStatement classStatement) {
+        Object superclass = null;
+        if (classStatement.superclass != null) {
+            superclass = evaluate(classStatement.superclass);
+            if (!(superclass instanceof LoxClass))
+                throw new RuntimeError(classStatement.superclass.token, "Superclass must be a class");
+        }
+
         environment.define(classStatement.name.lexeme, null);
 
         Map<String, LoxFunction> methods = new HashMap<>();
@@ -367,7 +379,7 @@ public class Interpreter implements Visitor<Object> {
             classMethods.put(method.token, function);
         }
 
-        LoxClass clazz = new LoxClass(classStatement.name.lexeme, methods, classMethods);
+        LoxClass clazz = new LoxClass(classStatement.name.lexeme, (LoxClass) superclass, methods, classMethods);
         environment.assign(classStatement.name, clazz);
         return null;
     }

@@ -4,5 +4,6 @@ public enum FunctionType {
     NONE,
     METHOD,
     FUNCTION,
-    CLASS_METHOD, INITIALIZER
+    CLASS_METHOD,
+    INITIALIZER
 }

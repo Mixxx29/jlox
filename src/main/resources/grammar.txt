@@ -1,6 +1,6 @@
 program              →  declaration* EOF
 declaration          →  classDeclaration | variableDeclaration | functionDeclaration | statement
-classDeclaration     →  "class" IDENTIFIER "{" function* "}"
+classDeclaration     →  "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}"
 variableDeclaration  →  "var" IDENTIFIER ( "=" expression )? ";"
 functionDeclaration  →  "fun" function
 function             →  "class"? IDENTIFIER "(" parameters? ")" block
@@ -36,4 +36,11 @@ factor               →  unary ( ( "/" | "*" ) unary )*
 unary                →  ( "!" | "-" ) unary | call
 call                 →  primary ( "(" arguments? ")" | "." IDENTIFIER )*
 arguments            →  expression ( "," expression )*
-primary              →  IDENTIFIER | NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+primary              →  IDENTIFIER
+                     |  NUMBER
+                     |  STRING
+                     |  "true"
+                     |  "false"
+                     |  "nil"
+                     |  "(" expression ")"
+                     |  "super" "." IDENTIFIER

@@ -106,6 +106,15 @@ expressions:
       - type: Token
         name: keyword
 
+  - name: SuperExpression
+    parentClass: Expression
+    fields:
+      - type: Token
+        name: keyword
+
+      - type: Token
+        name: method
+
   - name: LambdaExpression
     parentClass: Expression
     fields:
@@ -204,6 +213,9 @@ statements:
     fields:
       - type: Token
         name: name
+
+      - type: VariableExpression
+        name: superclass
 
       - type: List<FunctionStatement>
         name: methods

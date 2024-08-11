@@ -104,6 +104,11 @@ public class Resolver implements Visitor<Void> {
     }
 
     @Override
+    public Void visitSuperExpression(SuperExpression superExpression) {
+        return null;
+    }
+
+    @Override
     public Void visitLambdaExpression(LambdaExpression lambdaExpression) {
         resolveLambda(lambdaExpression, FunctionType.FUNCTION);
         return null;
@@ -196,6 +201,13 @@ public class Resolver implements Visitor<Void> {
 
         declare(classStatement.name);
         define(classStatement.name);
+
+        if (classStatement.superclass != null) {
+            if (classStatement.superclass.token.lexeme.equals(classStatement.name.lexeme))
+                Lox.error(classStatement.superclass.token, "A class can't inherit it self");
+
+            resolve(classStatement.superclass);
+        }
 
         beginScope();
         scopes.peek().put("this", true);

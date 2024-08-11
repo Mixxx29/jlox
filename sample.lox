@@ -1,10 +1,10 @@
 
-class Math {
-  class square(n) {
-    return n * n;
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
   }
 }
 
-var math = Math();
+class BostonCream < Doughnut {}
 
-print math.square(3);
+BostonCream().cook();
