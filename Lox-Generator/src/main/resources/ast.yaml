@@ -207,3 +207,6 @@ statements:
 
       - type: List<FunctionStatement>
         name: methods
+
+      - type: List<FunctionStatement>
+        name: classMethods

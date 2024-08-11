@@ -15,8 +15,10 @@ public class LoxInstance {
         if (fields.containsKey(token.lexeme))
             return fields.get(token.lexeme);
 
-        LoxFunction method = clazz.findMethod(token.lexeme);
-        if (method != null) return method.bind(this);
+        if (clazz != null) {
+            LoxFunction method = clazz.findMethod(token.lexeme);
+            if (method != null) return method.bind(this);
+        }
 
         throw new RuntimeError(token, "Undefined property '" + token.lexeme + "'");
     }

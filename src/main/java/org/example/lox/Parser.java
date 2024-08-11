@@ -40,12 +40,16 @@ public class Parser {
         consumeToken(TokenType.LEFT_BRACE, "Expected '{' after class name");
 
         List<FunctionStatement> methods = new ArrayList<>();
+        List<FunctionStatement> classMethods = new ArrayList<>();
         while (!checkTokenType(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(parseFunction("method"));
+            if (matchToken(TokenType.CLASS))
+                classMethods.add(parseFunction("class method"));
+            else
+                methods.add(parseFunction("method"));
         }
 
         consumeToken(TokenType.RIGHT_BRACE, "Expected '}' after class body");
-        return new ClassStatement(name, methods);
+        return new ClassStatement(name, methods, classMethods);
     }
 
     private FunctionStatement parseFunction(String kind) {
@@ -220,17 +224,6 @@ public class Parser {
         return parseAssignment();
     }
 
-    private Expression parseLambdaExpression() {
-        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'lambda'");
-        List<Token> parameters = parseParameters();
-        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
-        consumeToken(TokenType.POINTER, "Expected '->' after ')'");
-        List<Statement> statements;
-        consumeToken(TokenType.LEFT_BRACE, "Expected '{' after '->'");
-        statements = parseBlock();
-        return new LambdaExpression(parameters, statements);
-    }
-
     private Expression parseAssignment() {
         if (matchToken(TokenType.LAMBDA))
             return parseLambdaExpression();
@@ -252,6 +245,17 @@ public class Parser {
         }
 
         return expression;
+    }
+
+    private Expression parseLambdaExpression() {
+        consumeToken(TokenType.LEFT_PARENTHESIS, "Expected '(' after 'lambda'");
+        List<Token> parameters = parseParameters();
+        consumeToken(TokenType.RIGHT_PARENTHESIS, "Expected ')' after arguments");
+        consumeToken(TokenType.POINTER, "Expected '->' after ')'");
+        List<Statement> statements;
+        consumeToken(TokenType.LEFT_BRACE, "Expected '{' after '->'");
+        statements = parseBlock();
+        return new LambdaExpression(parameters, statements);
     }
 
     private Expression parseOr() {

@@ -1,9 +1,10 @@
 
-class Test {
-    init(a, b) {
-        this.c = a + b;
-    }
+class Math {
+  class square(n) {
+    return n * n;
+  }
 }
 
-var test = Test(5, 7);
-print test.c;
+var math = Math();
+
+print math.square(3);

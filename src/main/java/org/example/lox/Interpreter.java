@@ -361,7 +361,13 @@ public class Interpreter implements Visitor<Object> {
             methods.put(method.token.lexeme, function);
         }
 
-        LoxClass clazz = new LoxClass(classStatement.name.lexeme, methods);
+        Map<Token, LoxFunction> classMethods = new HashMap<>();
+        for (FunctionStatement method : classStatement.classMethods) {
+            LoxFunction function = new LoxFunction(method, environment, false);
+            classMethods.put(method.token, function);
+        }
+
+        LoxClass clazz = new LoxClass(classStatement.name.lexeme, methods, classMethods);
         environment.assign(classStatement.name, clazz);
         return null;
     }

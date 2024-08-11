@@ -1,14 +1,20 @@
 package org.example.lox;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
-public class LoxClass implements LoxCallable {
+public class LoxClass extends LoxInstance implements LoxCallable {
     public final String name;
     private final Map<String, LoxFunction> methods;
+
+    public LoxClass(String name, Map<String, LoxFunction> methods, Map<Token, LoxFunction> classMethods) {
+        super(null);
+        this.name = name;
+        this.methods = methods;
+
+        for (Map.Entry<Token, LoxFunction> entry : classMethods.entrySet())
+            set(entry.getKey(), entry.getValue());
+    }
 
     @Override
     public String toString() {

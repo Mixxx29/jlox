@@ -3,7 +3,7 @@ declaration          →  classDeclaration | variableDeclaration | functionDecla
 classDeclaration     →  "class" IDENTIFIER "{" function* "}"
 variableDeclaration  →  "var" IDENTIFIER ( "=" expression )? ";"
 functionDeclaration  →  "fun" function
-function             →  IDENTIFIER "(" parameters? ")" block
+function             →  "class"? IDENTIFIER "(" parameters? ")" block
 parameters           →  IDENTIFIER ( "," IDENTIFIER )*
 statement            →  expressionStatement
                      |  block

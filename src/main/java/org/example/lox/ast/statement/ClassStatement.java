@@ -4,6 +4,8 @@ import org.example.lox.Token;
 
 import java.util.List;
 
+import java.util.List;
+
 import org.example.lox.ast.Visitor;
 
 
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class ClassStatement extends Statement {
 	public final Token name;
 	public final List<FunctionStatement> methods;
+	public final List<FunctionStatement> classMethods;
 
 	public <R> R accept(Visitor<R> visitor) {
 		return visitor.visitClassStatement(this);

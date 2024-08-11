@@ -94,6 +94,11 @@ public class Resolver implements Visitor<Void> {
             return null;
         }
 
+        if (currentFunction == FunctionType.CLASS_METHOD) {
+            Lox.error(thisExpression.keyword, "Can't use 'this' in static methods");
+            return null;
+        }
+
         resolveLocal(thisExpression, thisExpression.keyword);
         return null;
     }
@@ -202,6 +207,9 @@ public class Resolver implements Visitor<Void> {
 
             resolveFunction(method, declaration);
         }
+
+        for (FunctionStatement method : classStatement.classMethods)
+            resolveFunction(method, FunctionType.CLASS_METHOD);
 
         endScope();
         currentClass = enclosingClass;
