@@ -253,6 +253,11 @@ public class Interpreter implements Visitor<Object> {
     }
 
     @Override
+    public Object visitThisExpression(ThisExpression thisExpression) {
+        return lookUpVariable(thisExpression.keyword, thisExpression);
+    }
+
+    @Override
     public Object visitLambdaExpression(LambdaExpression lambdaExpression) {
         FunctionStatement functionStatement = new FunctionStatement(
                 null,
@@ -409,8 +414,8 @@ public class Interpreter implements Visitor<Object> {
         return value.toString();
     }
 
-    private Object lookUpVariable(Token token, VariableExpression variableExpression) {
-        Integer distance = locals.get(variableExpression);
+    private Object lookUpVariable(Token token, Expression expression) {
+        Integer distance = locals.get(expression);
         if (distance != null)
             return environment.getAt(distance, token.lexeme);
 

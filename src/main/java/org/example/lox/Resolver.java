@@ -87,6 +87,12 @@ public class Resolver implements Visitor<Void> {
     }
 
     @Override
+    public Void visitThisExpression(ThisExpression thisExpression) {
+        resolveLocal(thisExpression, thisExpression.keyword);
+        return null;
+    }
+
+    @Override
     public Void visitLambdaExpression(LambdaExpression lambdaExpression) {
         resolveLambda(lambdaExpression, FunctionType.FUNCTION);
         return null;
@@ -173,10 +179,15 @@ public class Resolver implements Visitor<Void> {
         declare(classStatement.name);
         define(classStatement.name);
 
+        beginScope();
+        scopes.peek().put("this", true);
+
         for (FunctionStatement method : classStatement.methods) {
             FunctionType declaration = FunctionType.METHOD;
             resolveFunction(method, FunctionType.METHOD);
         }
+
+        endScope();
 
         return null;
     }

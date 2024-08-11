@@ -100,6 +100,12 @@ expressions:
       - type: Expression
         name: value
 
+  - name: ThisExpression
+    parentClass: Expression
+    fields:
+      - type: Token
+        name: keyword
+
   - name: LambdaExpression
     parentClass: Expression
     fields:

@@ -406,6 +406,8 @@ public class Parser {
         if (matchToken(TokenType.FALSE)) return new LiteralExpression(false, TokenType.FALSE);
         if (matchToken(TokenType.NIL)) return new LiteralExpression(null, TokenType.NIL);
 
+        if (matchToken(TokenType.THIS)) return new ThisExpression(previousToken());
+
         if (matchToken(TokenType.IDENTIFIER)) return new VariableExpression(previousToken());
 
         if (matchToken(TokenType.LEFT_PARENTHESIS)) {
