@@ -15,6 +15,7 @@ public class Resolver implements Visitor<Void> {
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
+    private ClassType currentClass = ClassType.NONE;
 
     @Override
     public Void visitUnaryExpression(UnaryExpression unaryExpression) {
@@ -88,6 +89,11 @@ public class Resolver implements Visitor<Void> {
 
     @Override
     public Void visitThisExpression(ThisExpression thisExpression) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(thisExpression.keyword, "Can't use 'this' outside of a class");
+            return null;
+        }
+
         resolveLocal(thisExpression, thisExpression.keyword);
         return null;
     }
@@ -168,14 +174,21 @@ public class Resolver implements Visitor<Void> {
         if (currentFunction == FunctionType.NONE)
             Lox.error(returnStatement.keyword, "Can't use return statement outside of a function");
 
-        if (returnStatement.value != null)
+        if (returnStatement.value != null) {
+            if (currentFunction == FunctionType.INITIALIZER)
+                Lox.error(returnStatement.keyword, "Can't return a value from an initializer");
+
             resolve(returnStatement.value);
+        }
 
         return null;
     }
 
     @Override
     public Void visitClassStatement(ClassStatement classStatement) {
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
         declare(classStatement.name);
         define(classStatement.name);
 
@@ -184,10 +197,14 @@ public class Resolver implements Visitor<Void> {
 
         for (FunctionStatement method : classStatement.methods) {
             FunctionType declaration = FunctionType.METHOD;
-            resolveFunction(method, FunctionType.METHOD);
+            if (method.token.lexeme.equals("init"))
+                declaration = FunctionType.INITIALIZER;
+
+            resolveFunction(method, declaration);
         }
 
         endScope();
+        currentClass = enclosingClass;
 
         return null;
     }

@@ -265,7 +265,7 @@ public class Interpreter implements Visitor<Object> {
                 lambdaExpression.body
         );
 
-        return new LoxFunction(functionStatement, environment);
+        return new LoxFunction(functionStatement, environment, false);
     }
 
     @Override
@@ -337,7 +337,7 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitFunctionStatement(FunctionStatement functionStatement) {
-        LoxFunction function = new LoxFunction(functionStatement, environment);
+        LoxFunction function = new LoxFunction(functionStatement, environment, false);
         environment.define(functionStatement.token.lexeme, function);
         return null;
     }
@@ -357,7 +357,7 @@ public class Interpreter implements Visitor<Object> {
 
         Map<String, LoxFunction> methods = new HashMap<>();
         for (FunctionStatement method : classStatement.methods) {
-            LoxFunction function = new LoxFunction(method, environment);
+            LoxFunction function = new LoxFunction(method, environment, method.token.lexeme.equals("init"));
             methods.put(method.token.lexeme, function);
         }
 
