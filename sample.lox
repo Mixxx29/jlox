@@ -1,20 +1,83 @@
+// Base class: Character
+class Character {
+    init(name, health, attackPower) {
+        this.name = name;
+        this.health = health;
+        this.attackPower = attackPower;
+    }
 
-class A {
-    method() {
-        print "A method";
+    attack(target) {
+        print this.name + " attacks " + target.name + " for " + this.attackPower + " damage!";
+        target.takeDamage(this.attackPower);
+    }
+
+    takeDamage(amount) {
+        this.health = this.health - amount;
+        if (this.health < 0) this.health = 0;
+        print this.name + " now has " + this.health + " health.";
+    }
+
+    isAlive() {
+        return this.health > 0;
     }
 }
 
-class B < A {
-    method() {
-        print "B method";
+// Subclass: Warrior
+class Warrior < Character {
+    init(name, health, attackPower, armor) {
+        super.init(name, health, attackPower);
+        this.armor = armor;
     }
 
-    test() {
-        super.method();
+    takeDamage(amount) {
+        var reducedDamage = amount - this.armor;
+        if (reducedDamage < 0) reducedDamage = 0;
+        print this.name + "'s armor reduces damage to " + reducedDamage + "!";
+        super.takeDamage(reducedDamage);
     }
 }
 
-class C < B {}
+// Subclass: Mage
+class Mage < Character {
+    init(name, health, attackPower, mana) {
+        super.init(name, health, attackPower);
+        this.mana = mana;
+    }
 
-C().test();
+    castSpell(target) {
+        if (this.mana >= 10) {
+            var spellDamage = this.attackPower * 2;
+            print this.name + " casts a spell on " + target.name + " for " + spellDamage + " damage!";
+            target.takeDamage(spellDamage);
+            this.mana = this.mana - 10;
+            print this.name + " now has " + this.mana + " mana.";
+        } else {
+            print this.name + " doesn't have enough mana to cast a spell!";
+        }
+    }
+}
+
+// Create characters
+var warrior = Warrior("Thorin", 100, 15, 5);
+var mage = Mage("Gandalf", 80, 10, 30);
+var enemy = Character("Goblin", 50, 8);
+
+// Start battle
+print "Battle begins!";
+
+while (enemy.isAlive()) {
+    warrior.attack(enemy);
+
+    if (!enemy.isAlive())
+        break;
+
+    mage.castSpell(enemy);
+
+    if (!enemy.isAlive())
+        break;
+
+    enemy.attack(warrior);
+}
+
+print enemy.name + " has been defeated!";
+print "Battle ended!";
