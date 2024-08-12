@@ -105,6 +105,12 @@ public class Resolver implements Visitor<Void> {
 
     @Override
     public Void visitSuperExpression(SuperExpression superExpression) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(superExpression.keyword, "Can't use 'super' outside of a class");
+        } else if (currentClass != ClassType.SUBCLASS) {
+            Lox.error(superExpression.keyword, "Can't use 'super' in class without superclass");
+        }
+        resolveLocal(superExpression, superExpression.keyword);
         return null;
     }
 
@@ -206,7 +212,12 @@ public class Resolver implements Visitor<Void> {
             if (classStatement.superclass.token.lexeme.equals(classStatement.name.lexeme))
                 Lox.error(classStatement.superclass.token, "A class can't inherit it self");
 
+            currentClass = ClassType.SUBCLASS;
+
             resolve(classStatement.superclass);
+
+            beginScope();
+            scopes.peek().put("super", true);
         }
 
         beginScope();
@@ -224,6 +235,10 @@ public class Resolver implements Visitor<Void> {
             resolveFunction(method, FunctionType.CLASS_METHOD);
 
         endScope();
+
+        if (classStatement.superclass != null)
+            endScope();
+
         currentClass = enclosingClass;
 
         return null;

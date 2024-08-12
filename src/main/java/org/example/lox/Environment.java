@@ -8,7 +8,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class Environment {
-    private final Environment parent;
+    public final Environment parent;
     private final Map<String, Object> values = new HashMap<>();
 
     public Object get(Token token) {

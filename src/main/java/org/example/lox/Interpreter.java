@@ -259,7 +259,17 @@ public class Interpreter implements Visitor<Object> {
 
     @Override
     public Object visitSuperExpression(SuperExpression superExpression) {
-        return null;
+        int distance = locals.get(superExpression);
+        LoxClass superclass = (LoxClass) environment.getAt(distance, "super");
+        LoxInstance object = (LoxInstance) environment.getAt(distance - 1, "this");
+        LoxFunction method = superclass.findMethod(superExpression.method.lexeme);
+        if (method == null) {
+            throw new RuntimeError(
+                    superExpression.method, "Undefined property '" + superExpression.method.lexeme + "'"
+            );
+        }
+
+        return method.bind(object);
     }
 
     @Override
@@ -367,6 +377,11 @@ public class Interpreter implements Visitor<Object> {
 
         environment.define(classStatement.name.lexeme, null);
 
+        if (superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
+
         Map<String, LoxFunction> methods = new HashMap<>();
         for (FunctionStatement method : classStatement.methods) {
             LoxFunction function = new LoxFunction(method, environment, method.token.lexeme.equals("init"));
@@ -380,6 +395,10 @@ public class Interpreter implements Visitor<Object> {
         }
 
         LoxClass clazz = new LoxClass(classStatement.name.lexeme, (LoxClass) superclass, methods, classMethods);
+
+        if (superclass != null)
+            environment = environment.parent;
+
         environment.assign(classStatement.name, clazz);
         return null;
     }
