@@ -64,19 +64,23 @@ var enemy = Character("Goblin", 50, 8);
 
 // Start battle
 print "Battle begins!";
+print "";
 
 while (enemy.isAlive()) {
     warrior.attack(enemy);
+    print "";
 
     if (!enemy.isAlive())
         break;
 
     mage.castSpell(enemy);
+    print "";
 
     if (!enemy.isAlive())
         break;
 
     enemy.attack(warrior);
+    print "";
 }
 
 print enemy.name + " has been defeated!";
