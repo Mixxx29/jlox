@@ -85,3 +85,6 @@ while (enemy.isAlive()) {
 
 print enemy.name + " has been defeated!";
 print "Battle ended!";
+
+print "";
+print "Program executed in " + (clock() / 1000) + "s";
